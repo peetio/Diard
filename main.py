@@ -123,7 +123,6 @@ def main():
             if(i == len(pdf_pages)-1):
                 joinJsons(output_json_dir)
 
-
             torch.cuda.empty_cache() # Prevent CUDA out of memory
 
     if args.sectioning:

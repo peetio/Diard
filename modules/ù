@@ -1,0 +1,25 @@
+#   Document    Class   Definition
+from modules.exceptions import DocumentFileFormatError
+
+
+class Document():
+
+    def __init__(self, path, predictor=None, metadata=None):
+        """Create instance of Document object
+        """
+        filename = path.split('/')[-1]
+        file_format = filename.split('.')[-1]
+        if file_format not in ['pdf', 'docx']:
+            raise DocumentFileFormatError(filename)
+
+        self.filename = filename
+        self.file_format = file_format
+        self.path = path
+
+        self.metadata = metadata
+        self.predictor = predictor
+
+    def convertToImages():
+
+        filename = "example.pdf"
+
