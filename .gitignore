@@ -1,0 +1,8 @@
+archive/
+diardenv/
+output/
+resources/weights/
+modules/__pycache__/
+resources/pdfs/
+ditod/__pycache__/
+

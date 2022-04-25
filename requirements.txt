@@ -1,0 +1,7 @@
+timm==0.5.4
+scipy
+shapely
+pdf2image
+tqdm
+scikit-learn
+jenkspy
