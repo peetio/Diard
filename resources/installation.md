@@ -36,12 +36,14 @@ The install command below should work to install the Detectron AI toolkit by Fac
 pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@v0.5#egg=detectron2"
 ```
 
-## Step 5: Tesseract
+## Step 5: PyTesseract
 
-The Tesseract engine is used for text recognition. For more information about the installation you can refer to the [official tessdocs](https://tesseract-ocr.github.io/tessdoc/Installation.html).
+A Tesseract OCR Python Wrapper is used for text recognition. For more information about the installation you can refer to the [pytesseract](https://github.com/madmaze/pytesseract) GitHub repo.
+
+#TODO: test this installation on another machine because you might have to add it to env vars and stuff...
 
 ```bash
-sudo apt install tesseract-ocr-deu
+pip install pip install pytesseract
 ```
 
 ## Step 6: Layout Parser
@@ -50,10 +52,8 @@ For more information about this DIA toolkit you can refer to the [Layout Parser 
 
 ```bash
 pip install layoutparser # Base library
-pip install "layoutparser[ocr]" # OCR toolkit
+pip install "layoutparser[ocr]" # OCR toolkit # TODO: still used in Diard version? Try it out..
 ```
-
-
 
 ## STEP 7: Python Libraries
 

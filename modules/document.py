@@ -1,10 +1,13 @@
 #   Document class definition
 import os
 import cv2
+import logging
 import layoutparser as lp
 import numpy as np
-from tqdm import tqdm
+from pytesseract import image_to_string
 
+from tqdm import tqdm
+from pathlib import Path
 from pdf2image import convert_from_path
 from detectron2.utils.visualizer import ColorMode, Visualizer
 
@@ -40,8 +43,10 @@ class Document():
             if output_path[-1] == '/':
                 output_path+=self.name
             else: output_path+='/'+self.name
-        if not os.path.isdir(output_path):
-            os.makedirs(output_path)
+
+        Path(output_path).mkdir(parents=True, exist_ok=True)
+        #if not os.path.isdir(output_path):
+        #    os.makedirs(output_path)
         self.output_path = output_path
 
         self.metadata = metadata
@@ -53,7 +58,6 @@ class Document():
 
     def docToImages(self):
         """Converts each page of a document to images"""
-
         pil_imgs = convert_from_path(self.source_path) 
         self.images = [np.asarray(img) for img in pil_imgs] #   TODO: make sure they are in the right format
 
@@ -67,10 +71,12 @@ class Document():
             visualize (bool): if True detection visualizations are saved to self.output_path
         """
 
+        ocr_agent = lp.TesseractAgent(languages='deu')
+
         if None in [self.predictor, self.metadata]:
             raise UnsetAttributeError("extractLayout()", ["predictor", "metadata"])
 
-        for i, img in tqdm(enumerate(self.images),
+        for page, img in tqdm(enumerate(self.images),
                             desc=("Processing \'"+self.name+"\'"),
                             total=len(self.images)):
 
@@ -87,10 +93,33 @@ class Document():
                 block = lp.TextBlock(block=rects[j], 
                                             type=self.label_map[classes[j]], 
                                             score=scores[j])
-                if block.type == 
-                blocks.append(block)
 
-            
+                #   TODO: put this in a function in another module
+                b_type = block.type.lower()
+                if b_type in ['text', 'title', 'list']:
+                    snippet = (block
+                            .pad(left=5, right=5, top=5, bottom=5)
+                            .crop_image(img))
+
+                    #text = ocr_agent.detect(snippet)
+                    text = image_to_string(snippet, lang='deu')
+                    print(text)
+                    block.set(text=text, inplace=True)
+
+                elif b_type in ['table', 'figure']:
+                    #   TODO: add table support
+                    if b_type == 'Table':
+                        logging.warning("Tables are currently not supported and are therefore processed like figures.")
+                    snippet = block.crop_image(img)
+                    img_name = page + ".jpg"
+                    figure_path = self.output_path + "/figures/" + img_name
+                    save_path = os.path.abspath(figure_path)    #   NOTE: is using the abs path correct?
+                    cv2.imwrite(figure_path, snippet)
+                    block.set(text=save_path, inplace=True)
+                else:
+                    logging.warning(f'Block of type \'{b_type}\' not supported.')
+                    
+                blocks.append(block)
 
             self.layouts.append(lp.Layout(blocks=blocks))
 
@@ -104,9 +133,10 @@ class Document():
 
                 visual = v.draw_instance_predictions(predicts.to("cpu"))
                 vis_img = visual.get_image()[:, :, ::-1]
-
-                visual_path = self.output_path+'/'+str(i)+'.jpg'
-                cv2.imwrite(visual_path, vis_img)
+                
+                visual_dir = self.output_path+"/visuals/"
+                Path(visual_dir).mkdir(parents=True, exist_ok=True)
+                cv2.imwrite(visual_dir + str(page)+'.jpg', vis_img)
 
             if segment_sections:
                 #   TODO: 26 Apr - add section segmentation (in new function in other module)
@@ -116,10 +146,11 @@ class Document():
 
 
 
+    #   TODO: maybe add function to order only one layout if this is useful
     def orderLayouts(self):
         """Orders each page's layout based object bounding boxes"""
-        for i, layout in enumerate(self.layouts):
-            self.layouts[i] = layout.sort(key=lambda b:b.block.y_1)
-            self.layouts[i] = lp.Layout([b.set(id = idx) for idx, b in enumerate(layout)]) #   NOTE: not sure if this changes the original item in the list
-        #   TODO: add support for Manhattan, NOTE: do we need a specification of whether it's Manhattan or not or do we figure this out ourselves... When using a lot of documents like in our case this would be very handy
+        for page, layout in enumerate(self.layouts):
+            self.layouts[page] = layout.sort(key=lambda b:b.block.y_1)
+            self.layouts[page] = lp.Layout([b.set(id = idx) for idx, b in enumerate(layout)])
+        #   TODO: add support for Manhattan (page split), NOTE: do we need a specification of whether it's Manhattan or not or do we figure this out ourselves... When using a lot of documents like in our case this would be very handy
 

@@ -6,6 +6,7 @@ from modules.document import Document
 
 def main():
     logging.basicConfig(format='%(asctime)s | %(levelname)s: %(message)s', level=logging.NOTSET)
+    logging.disable(logging.DEBUG)
 
     # Suppressing PyTorch & Detectron warnings 
     warnings.filterwarnings("ignore", category=UserWarning) # NOTE: comment out for debugging
@@ -20,6 +21,7 @@ def main():
     
     document.docToImages()
     document.extractLayouts(visualize=True)
+    document.orderLayouts()
 
 
 
