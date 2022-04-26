@@ -1,9 +1,14 @@
 import logging
+import warnings
+
 from modules.utils2 import initializeModel
 from modules.document import Document
 
 def main():
     logging.basicConfig(format='%(asctime)s | %(levelname)s: %(message)s', level=logging.NOTSET)
+
+    # Suppressing PyTorch & Detectron warnings 
+    warnings.filterwarnings("ignore", category=UserWarning) # NOTE: comment out for debugging
 
     #   Step 1: create Document object instance
     config_path = './resources/model_configs/cascade/cascade_dit_large.yaml'
@@ -13,8 +18,8 @@ def main():
     document_path = './resources/pdfs/example.pdf'
     document = Document(document_path, predictor=predictor, metadata=metadata)
     
-    document.convertToImages()
-    document.extractLayout()
+    document.docToImages()
+    document.extractLayouts(visualize=True)
 
 
 

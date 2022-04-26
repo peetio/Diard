@@ -2,15 +2,12 @@
 class DocumentFileFormatError(Exception):
     """Raised when given document file format not supported"""
 
-    def __init__(self, filename):
-        self.filename = filename
+    def __init__(self, name, file_format):
 
-        split_filename = filename.split('.')
-        if len(split_filename) > 1:
-            self.extension = split_filename[-1]
-            self.message = 'Document \'{}\' has an unsupported file format: \'.{}\''.format(self.filename, self.extension)
+        if len(file_format) > 1:
+            self.message = 'Document \'{}\' has an unsupported file format: \'.{}\''.format(name, file_format)
         else:
-            self.message = 'Document \'{self.filename}\' has no file format extension'
+            self.message = 'Document \'{}\' has no file format extension'.format(name)
 
     def __str__(self):
         return self.message
