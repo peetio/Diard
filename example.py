@@ -22,6 +22,7 @@ def main():
     document.docToImages()
     document.extractLayouts(visualize=True)
     document.orderLayouts()
+    document.saveLayoutAsJson(2)
 
 
 

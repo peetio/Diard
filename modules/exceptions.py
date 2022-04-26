@@ -22,3 +22,15 @@ class UnsetAttributeError(Exception):
 
     def __str__(self):
         return self.message
+
+
+
+class PageNumberError(Exception):
+    """Raised when user tries to access non-existing document pages"""
+
+    def __init__(self, page, pages):
+        self.message = 'Cannot access item at index {}, document only consists out of {} pages. Please note that zero-based numbering is used.'.format(page, pages)
+
+    def __str__(self):
+        return self.message
+
