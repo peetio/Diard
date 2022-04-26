@@ -11,6 +11,7 @@ from tqdm import tqdm
 from pathlib import Path
 from pdf2image import convert_from_path
 from detectron2.utils.visualizer import ColorMode, Visualizer
+from layoutparser.elements import TextBlock, Rectangle
 
 from modules.exceptions import DocumentFileFormatError, UnsetAttributeError, PageNumberError
 
@@ -45,6 +46,25 @@ class Document():
 
 
 
+    @classmethod
+    def getLayoutJsonDims(cls, l, dims=0):
+        """Recursive function to find number of dimensions (n of rows) in a list
+
+        Args:
+            l (list): list of which you want to know the number of rows
+            dims (int): the current dimensionality or number of rows in the "list"
+
+        Returns:
+            the dimensionality or number of rows in the "list"
+        """
+
+        if not type(l) == list:
+            return dims
+
+        return cls.getLayoutJsonDims(l[0], (dims+1))
+
+
+ 
     def __init__(self, source_path, output_path=None, predictor=None, metadata=None,
                     label_map=["text","title","list","table","figure"]):
         """Creates instance of Document object
@@ -64,7 +84,7 @@ class Document():
 
         self.name = '.'.join(name.split('.')[:-1]) 
         self.file_format = file_format
-        self.source_path= source_path 
+        self.source_path = source_path 
 
         if output_path is None:
             output_path = 'output/'+self.name
@@ -74,8 +94,6 @@ class Document():
             else: output_path+='/'+self.name
 
         Path(output_path).mkdir(parents=True, exist_ok=True)
-        #if not os.path.isdir(output_path):
-        #    os.makedirs(output_path)
         self.output_path = output_path
 
         self.metadata = metadata
@@ -101,8 +119,8 @@ class Document():
             visualize (bool): if True detection visualizations are saved to self.output_path
         """
 
-        if None in [self.predictor, self.metadata]:
-            raise UnsetAttributeError("extractLayout()", ["predictor", "metadata"])
+        if None in [self.predictor, self.metadata, self.images]:
+            raise UnsetAttributeError("extractLayout()", ["predictor", "metadata", "images"])
 
         if len(self.layouts) > 0:
             self.layouts = []
@@ -126,6 +144,9 @@ class Document():
                                             score=scores[j])
 
                 b_type = block.type.lower()
+                print("Block are of type:", type(block))
+                print("What is this:", block.block)
+                print("What is this's type:", type(block.block))
                 self.setExtractedData(b_type, block, img)    
                 blocks.append(block)
 
@@ -246,7 +267,54 @@ class Document():
             f.write(json.dumps(layouts_json))
 
 
-    
+    def jsonToLayout(self, layout_json):
+        """Gets a Layout object from a JSON layout representation of a single page
+
+        Args:
+            layout_json (list): JSON layout representation of single page
+        """
+        blocks = []
+        for b in layout_json:
+            x1, y1, x2, y2 = b['box']
+            rect = Rectangle(x1, y1, x2, y2)
+            block = TextBlock(block=rect,
+                            text=b['content'],
+                            id=b['id'],
+                            type=self.label_map.index(b['type']))
+            blocks.append(block)
+        #   TODO: create layout object from the blocks
+        self.layouts.append(lp.Layout(blocks=blocks))
+
+
+
+    def loadLayoutFromJson(self, filename):
+        """Loads layouts from JSON file
+        
+        Args:
+            filename (str): JSON filename
+        """
+
+        if not filename.split('.')[-1] == "json":
+            filename+=".json"
+        json_path = self.output_path+"/jsons/"+filename
+        with open(json_path, 'r') as f:
+            layout_json = json.load(f)
+
+        #   TODO: here you have to check if the json file that is being loaded is a single JSON file, or a JSON file containing a whole document
+        #if len(layout_json) > 1:
+
+        dims = self.getLayoutJsonDims(l=layout_json)
+
+        if dims == 1:
+            self.jsonToLayout(layout_json)
+        elif dims == 2:
+            #   TODO: add support for whole document layout JSONs
+            for layout in layout_json:
+                self.jsonToLayout(layout)
+                #   FIXME: Currently the loaded or saved files are not sorted, if they were sorted before saving, the loading should also load them sorted... Normally the problem should originate from the ordering before JSON saving so inspect that first! Remember that the blocks don't have to be sorted.
+        else:
+            #   TODO: raise (create) an Exception
+            pass
     #   TODO: add function to load layout objects from JSON files
 
 
