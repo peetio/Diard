@@ -34,3 +34,14 @@ class PageNumberError(Exception):
     def __str__(self):
         return self.message
 
+
+
+class InputJsonStructureError(Exception):
+    """Raised when content structure of JSON file isn't supported"""
+
+    def __init__(self, filename):
+        self.message = 'Content structure of file \'' + filename + '\' is not supported.'
+
+    def __str__(self):
+        return self.message
+

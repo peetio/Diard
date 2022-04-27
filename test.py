@@ -16,7 +16,8 @@ def main():
     
     document.loadLayoutFromJson('example')
     document.orderLayouts()
-    print("Testing layout loading:", document.layouts)
+    print(document.layouts)
+
 
 
 if __name__ == "__main__":

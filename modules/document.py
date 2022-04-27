@@ -13,7 +13,7 @@ from pdf2image import convert_from_path
 from detectron2.utils.visualizer import ColorMode, Visualizer
 from layoutparser.elements import TextBlock, Rectangle
 
-from modules.exceptions import DocumentFileFormatError, UnsetAttributeError, PageNumberError
+from modules.exceptions import DocumentFileFormatError, UnsetAttributeError, PageNumberError, InputJsonStructureError
 
 
 
@@ -144,9 +144,6 @@ class Document():
                                             score=scores[j])
 
                 b_type = block.type.lower()
-                print("Block are of type:", type(block))
-                print("What is this:", block.block)
-                print("What is this's type:", type(block.block))
                 self.setExtractedData(b_type, block, img)    
                 blocks.append(block)
 
@@ -159,8 +156,6 @@ class Document():
                 #   TODO: 26 Apr - add section segmentation (in new function in other module)
                 pass
 
-            #   TODO: 26 Apr - define what the "layout detection object" will look like!
-
 
 
     #   TODO: maybe add function to order only one layout if this is useful
@@ -169,10 +164,10 @@ class Document():
 
         #   TODO: add support for Manhattan (page split), parameter of automatic detection of layout type?
         for page, layout in enumerate(self.layouts):
-            self.layouts[page] = layout.sort(key=lambda b:b.block.y_1)
+            layout = sorted(layout, key=lambda b:b.block.y_1)
             self.layouts[page] = lp.Layout([b.set(id = idx) for idx, b in enumerate(layout)])
+        
 
-    
 
     def visualizePredictions(self, predicts, img, index): 
         """Saves prediction visualizations
@@ -311,10 +306,8 @@ class Document():
             #   TODO: add support for whole document layout JSONs
             for layout in layout_json:
                 self.jsonToLayout(layout)
-                #   FIXME: Currently the loaded or saved files are not sorted, if they were sorted before saving, the loading should also load them sorted... Normally the problem should originate from the ordering before JSON saving so inspect that first! Remember that the blocks don't have to be sorted.
         else:
-            #   TODO: raise (create) an Exception
-            pass
+            raise InputJsonStructureError(filename)
     #   TODO: add function to load layout objects from JSON files
 
 
