@@ -529,18 +529,23 @@ class Document():
 
 
 
-    def getLayoutHtml(self, page):
+    def getLayoutHtml(self, page, section=None):
         """Saves HTML representation of single document page layout
 
         Args:
             page (int): page number of document
+            section (int): section to start from if processing multiple pages
         
         Returns:
             HTML representation of a single document page layout
         """
 
+        single = False
+        if section is None:
+            single = True
+            section=-1
+
         html = ""
-        section = -1
         for b in self.layouts[page]:
             html_span = self.getHtmlSpanByType(b)
             html+=html_span
@@ -554,7 +559,10 @@ class Document():
                 #   no section segmentation used
                 pass
 
-        return html
+        if single: 
+            return html
+        else: 
+            return (html, section)
 
 
 
@@ -566,8 +574,9 @@ class Document():
         """
 
         html=""
+        section=-1
         for page in range(len(self.layouts)):
-            html_span = self.getLayoutHtml(page)
+            html_span, section = self.getLayoutHtml(page, section)
             html+=html_span
         return html
 
@@ -585,7 +594,7 @@ class Document():
         html_dir = self.output_path+"/htmls/" 
         Path(html_dir).mkdir(parents=True, exist_ok=True)
         html_path = html_dir+str(page)+".html"
-        layout_html= self.getLayoutHtml(page)
+        layout_html = self.getLayoutHtml(page)
 
         html_path = html_dir+str(page)+".html"
         with open(html_path, 'w') as f:
@@ -728,7 +737,9 @@ class Document():
                 if b.type.lower() == "title":
                     #   prioritize numbered chapter headings
                     text = b.text.strip()
+                    print("Title text:", text)
                     c = text[0]
+                    print("First char:", c)
                     is_digit = c.isdigit()
                     isnt_empty = len(r_labels) > 0
                     is_heading = r_labels[title_id] == 'heading'
