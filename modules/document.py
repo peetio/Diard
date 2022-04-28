@@ -22,8 +22,7 @@ from modules.exceptions import DocumentFileFormatError, UnsetAttributeError, Pag
 class Document():
     @staticmethod
     def setExtractedData(b_type, block, img):
-        """Extracts and set content of document object (block)
-        """
+        """Extracts and sets content of document object (block)"""
 
         if b_type in ['text', 'title', 'list']:
             snippet = (block
@@ -84,7 +83,7 @@ class Document():
 
     @staticmethod
     def applyJenks(ratios, n_classes=3):
-        """Jenks Natural Breaks Optimization to find similar titles
+        """Applies Jenks Natural Breaks Optimization to find similar titles
 
         Args:
             ratios (list): list containing surface/ char count ratio for each title
@@ -201,7 +200,7 @@ class Document():
             dims (int): the current dimensionality or number of rows in the "list"
 
         Returns:
-            the dimensionality or number of rows in the "list"
+            the dimensionality (number of rows) in the "list"
         """
 
         if not type(l) == list:
@@ -210,7 +209,112 @@ class Document():
         return cls.getLayoutJsonDims(l[0], (dims+1))
 
 
- 
+
+    @staticmethod
+    def getListSpan(text):
+        """Gets HTML code representing a list
+
+        Args:
+            text (string): content (text) of document object
+        
+        Returns:
+            string: a string containing an HTML representation of a list
+        """
+
+        split_text = (text
+                          .replace("\f", '')
+                          .split("\n"))
+
+        #   Remove empty lines (trailing '\n')
+        split_text = [line for line in split_text if line != '']
+
+        html_span = "<ul>"
+
+        for list_item in split_text:
+            html_span += "<li>"+list_item+"</li>"
+
+        html_span += "</ul>"
+
+        return html_span
+
+
+
+    @staticmethod
+    def getTextSpan(text, filetype):
+        """Gets HTML code representing a paragraph or title depending on the type
+
+        Args:
+            text (string): content (text) of document object
+            filetype (string): type of the document object
+        
+        Returns:
+            HTML code string representing text
+        """
+
+        # TODO: postprocessing of OCR (i.e., replace '-',...)
+        text = text .replace("\f", '')
+
+        if filetype == 'text':
+            html_span = "<p>"+text+"</p>"
+
+        elif filetype == 'title':
+            html_span = "<h1>"+text+"</h1>"
+        
+        return html_span
+
+
+
+    @staticmethod
+    def getImageSpan(path, coords):
+        """Gets HTML code representing an image
+
+        Args:
+            path (string): path to the image
+            coords (tuple): top left and bottom right bounding box coordinates (x1, y1, x2, y2)
+        
+        Returns:
+            HTML code string representing a figure
+        """
+
+        path = "http://localhost/" + path
+        x1, y1, x2, y2 = coords
+        width = str((x2-x1)//2)
+        height = str((y2-y1)//2)
+        html_span = "<img src=\""+path+"\" alt=\"document figure\" width=\""+width+"\" height=\""+height+"\">"
+
+        return html_span
+
+
+
+    @staticmethod
+    def getHtmlSpanByType(block):
+        """Gets HTML code representing a document objects content based on its type
+
+        Args:
+            block (layoutparser.elements.TextBlock): TextBlock obj containing document object data
+        
+        Returns:
+            a string containing an HTML representation of document object
+        """
+
+        filetype = block.type.lower()
+        text = str(block.text)
+
+        if(filetype in ['text', 'title']):
+            html_span = Document.getTextSpan(text, filetype)
+                    
+        #   TODO: add table support
+        elif(filetype in ['figure', 'table']):
+            coords = block.block.coordinates
+            html_span = getImageSpan(text, coords)
+                    
+        elif(filetype == 'list'):
+            html_span = getListSpan(text)
+               
+        return html_span
+
+
+
     def __init__(self, source_path, output_path=None, predictor=None, metadata=None,
                     label_map=["text","title","list","table","figure"]):
         """Creates instance of Document object
@@ -246,14 +350,14 @@ class Document():
         self.predictor = predictor
         self.layouts = []
         self.label_map = label_map
-    
+
 
 
     def docToImages(self):
         """Converts each page of a document to images"""
         #   TODO: add word document support
         pil_imgs = convert_from_path(self.source_path) 
-        self.images = [np.asarray(img) for img in pil_imgs] #   TODO: make sure they are in the right format
+        self.images = [np.asarray(img) for img in pil_imgs]
 
 
 
@@ -262,7 +366,7 @@ class Document():
         
         Args:
             segment_sections (bool): if True sections are segmented
-            visualize (bool): if True detection visualizations are saved to self.output_path
+            visualize (bool): if True detection visualizations are saved
         """
 
         if None in [self.predictor, self.metadata, self.images]:
@@ -299,6 +403,8 @@ class Document():
                 self.visualizePredictions(predicts, img, page)
 
         if segment_sections:
+            self.orderLayouts()
+            logging.info('Ordering layout for section segmentation.')
             self.segmentSections()
 
 
@@ -335,6 +441,19 @@ class Document():
 
 
 
+    def pageCheck(self, page):
+        """Checks if the page is within range
+        
+        Args:
+            page (int): page number to check
+        """
+
+        pages = len(self.layouts)
+        if not 0 <= page <= pages-1: 
+            raise PageNumberError(page, pages)
+
+
+
     def getLayoutJson(self, page):
         """Gets JSON object representing a single document page layout
 
@@ -342,7 +461,7 @@ class Document():
             page (int): page number of document
 
         Returns:
-            JSON object representing a document page layout
+            JSON object representing a document single page layout
         """
 
         layout_json = []
@@ -361,7 +480,7 @@ class Document():
         """Gets JSON object representing the whole document layout
 
         Returns:
-            JSON objects (dicts) containing whole document layout
+            JSON objects (list of dictionaries) containing whole document layout
         """
         
         layouts_json = []
@@ -379,9 +498,7 @@ class Document():
             page (int): page number of document
         """
 
-        pages = len(self.layouts)
-        if not 0 <= page <= pages-1: 
-            raise PageNumberError(page, pages)
+        self.pageCheck(page)
 
         json_dir = self.output_path+"/jsons/"
         Path(json_dir).mkdir(parents=True, exist_ok=True)
@@ -408,6 +525,88 @@ class Document():
             f.write(json.dumps(layouts_json))
 
 
+
+    def getLayoutHtml(self, page):
+        """Saves HTML representation of single document page layout
+
+        Args:
+            page (int): page number of document
+        
+        Returns:
+            HTML representation of a single document page layout
+        """
+
+        html = ""
+        section = -1
+        for b in self.layouts[page]:
+            html_span = self.getHtmlSpanByType(b)
+            html+=html_span
+            try:
+                new_section = not b.section == section
+                is_title = b.type == 'title'
+                if new_section and is_title:
+                    section = b.section
+                    html+='<hr>'
+            except AttributeError:
+                #   no section segmentation used
+                pass
+
+        return html
+
+
+
+    def getLayoutsHtml(self):
+        """Gets HTML representation of a whole document layout
+
+        Returns:
+            HTML representation of whole document layout
+        """
+
+        html=""
+        for page in range(len(self.layouts)):
+            html_span = self.getLayoutHtml(page)
+            html+=html_span
+        return html
+
+
+
+    def saveLayoutAsHtml(self, page):
+        """Saves JSON representation of single document page layout
+
+        Args:
+            page (int): page number of document
+        """
+        #   TODO: add visualization (javascript + css)
+
+        self.pageCheck(page)
+        html_dir = self.output_path+"/htmls/" 
+        Path(html_dir).mkdir(parents=True, exist_ok=True)
+        html_path = html_dir+str(page)+".html"
+        layout_html= self.getLayoutHtml(page)
+
+        html_path = html_dir+str(page)+".html"
+        with open(html_path, 'w') as f:
+            f.write(layout_html)
+
+   
+
+    def saveLayoutsAsHtml(self):
+        """Saves HTML representation of whole document layout"""
+        
+        html_dir = self.output_path+"/htmls/" 
+        Path(html_dir).mkdir(parents=True, exist_ok=True)
+
+        for page in range(len(self.layouts)):
+            self.saveLayoutAsHtml(page)
+
+        html_path = html_dir+self.name+".html"
+        layouts_html = self.getLayoutsHtml()
+
+        with open(html_path, 'w') as f:
+            f.write(layouts_html)
+
+
+
     def jsonToLayout(self, layout_json):
         """Gets a Layout object from a JSON layout representation of a single page
 
@@ -426,6 +625,7 @@ class Document():
             blocks.append(block)
 
         self.layouts.append(lp.Layout(blocks=blocks))
+
 
 
     def loadLayoutFromJson(self, filename):
@@ -481,7 +681,6 @@ class Document():
                         labels.append('sub')
 
         return labels 
-
 
 
 
@@ -580,19 +779,11 @@ class Document():
                 b.section = section 
 
 
-        
+
     def segmentSections(self):
         """Segments sections based on numbering and natural breaks"""
-        
         cn_labels = self.sectionByChapterNums()
         r_labels = self.sectionByRatio()
         labels = self.prioritizeLabels(cn_labels, r_labels)
         self.setSections(labels)
-        print("Numbering labels:", cn_labels)
-        print("Jenks Labels:", r_labels)
-        print("Combined labels:", labels)
-        print("Do we have sections now?:", self.layouts)
-
-    #   TODO: add advanced HTML exportation (w/ CSS file this time for additional information and styling) the css file should be located in resources or something and accessed with an absolute path
-
 

@@ -21,8 +21,8 @@ def main():
     
     document.docToImages()
     document.extractLayouts(visualize=True, segment_sections=True)
-    document.orderLayouts()
-    document.saveLayoutAsJson(2)
+    document.saveLayoutsAsJson()
+    document.saveLayoutsAsHtml()
 
 
 
