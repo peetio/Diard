@@ -21,33 +21,6 @@ from modules.exceptions import DocumentFileFormatError, UnsetAttributeError, Pag
 
 class Document():
     @staticmethod
-    def setExtractedData(b_type, block, img):
-        """Extracts and sets content of document object (block)"""
-
-        if b_type in ['text', 'title', 'list']:
-            snippet = (block
-                        .pad(left=5, right=5, top=5, bottom=5)
-                        .crop_image(img))
-
-            text = image_to_string(snippet, lang='deu')
-            block.set(text=text, inplace=True)
-
-        elif b_type in ['table', 'figure']:
-            #   TODO: add table support
-            if b_type == 'table':
-                logging.warning("Tables are currently not supported and are therefore processed like figures.")
-            snippet = block.crop_image(img)
-            img_name = page + ".jpg"
-            figure_path = self.output_path + "/figures/" + img_name
-            save_path = os.path.abspath(figure_path)    #   NOTE: is using the abs path correct?
-            cv2.imwrite(figure_path, snippet)
-            block.set(text=save_path, inplace=True)
-        else:
-            logging.warning(f'Block of type \'{b_type}\' not supported.')
-
-
-
-    @staticmethod
     def getRatio(coords, text):
         """Gets the surface over char count ratio
 
@@ -62,7 +35,7 @@ class Document():
         #   set content & get first line of title
         text = text.strip()
         split_text = text.split("\n")
-        first_line = split_text[0]
+        first_line = split_text[0].strip()
 
         char_count = len(first_line)
 
@@ -269,14 +242,13 @@ class Document():
         """Gets HTML code representing an image
 
         Args:
-            path (string): path to the image
+            abs_path (string): absolute path to the image
             coords (tuple): top left and bottom right bounding box coordinates (x1, y1, x2, y2)
         
         Returns:
             HTML code string representing a figure
         """
 
-        path = "http://localhost/" + path
         x1, y1, x2, y2 = coords
         width = str((x2-x1)//2)
         height = str((y2-y1)//2)
@@ -306,10 +278,10 @@ class Document():
         #   TODO: add table support
         elif(filetype in ['figure', 'table']):
             coords = block.block.coordinates
-            html_span = getImageSpan(text, coords)
+            html_span = Document.getImageSpan(text, coords)
                     
         elif(filetype == 'list'):
-            html_span = getListSpan(text)
+            html_span = Document.getListSpan(text)
                
         return html_span
 
@@ -329,7 +301,7 @@ class Document():
 
         name = source_path.split('/')[-1]
         file_format = name.split('.')[-1]
-        if file_format not in ['pdf', 'docx']:  #   TODO: Apr 26 - test if other variations of pdf and docx can be used with image conversion
+        if file_format not in ['pdf']:  #   TODO: test if other variations of pdf and docx can be used with image conversion (add docx when support added)
             raise DocumentFileFormatError(name, file_format)
 
         self.name = '.'.join(name.split('.')[:-1]) 
@@ -358,6 +330,36 @@ class Document():
         #   TODO: add word document support
         pil_imgs = convert_from_path(self.source_path) 
         self.images = [np.asarray(img) for img in pil_imgs]
+
+
+
+    def setExtractedData(self, b_type, block, img, page):
+        """Extracts and sets content of document object (block)"""
+
+        figure_dir = self.output_path + "/figures/"
+        Path(figure_dir).mkdir(parents=True, exist_ok=True)
+
+        if b_type in ['text', 'title', 'list']:
+            snippet = (block
+                        .pad(left=5, right=5, top=5, bottom=5)
+                        .crop_image(img))
+
+            text = image_to_string(snippet, lang='deu')
+            block.set(text=text, inplace=True)
+
+        elif b_type in ['table', 'figure']:
+            #   TODO: add table support
+            if b_type == 'table':
+                logging.warning("Tables are currently not supported and are therefore processed like figures.")
+            snippet = block.crop_image(img)
+            img_name = str(page) + ".jpg"
+            figure_path = figure_dir + img_name
+            save_path = "../figures/" + img_name
+
+            cv2.imwrite(figure_path, snippet)
+            block.set(text=save_path, inplace=True)
+        else:
+            logging.warning(f'Block of type \'{b_type}\' not supported.')
 
 
 
@@ -394,7 +396,7 @@ class Document():
                                             score=scores[j])
 
                 b_type = block.type.lower()
-                self.setExtractedData(b_type, block, img)    
+                self.setExtractedData(b_type, block, img, page)    
                 blocks.append(block)
 
             self.layouts.append(lp.Layout(blocks=blocks))
@@ -406,6 +408,7 @@ class Document():
             self.orderLayouts()
             logging.info('Ordering layout for section segmentation.')
             self.segmentSections()
+
 
 
     def orderLayouts(self):
@@ -666,7 +669,8 @@ class Document():
             for b in layout:
                 if b.type.lower() == 'title':
                     chapter= ""
-                    for t in b.text:
+                    text = b.text.strip()
+                    for t in text:
                         if t.isdigit():
                             chapter+=(t)
                         else: break
@@ -714,6 +718,8 @@ class Document():
             a list containing the combined labels
         """
 
+        #   TODO: fix chapter numbering failures
+                    #   might have something to do with the reordering...
         labels =  []
         title_id = 0
 
@@ -721,14 +727,16 @@ class Document():
             for b in layout:
                 if b.type.lower() == "title":
                     #   prioritize numbered chapter headings
-                    is_digit = b.text[0].isdigit()
+                    text = b.text.strip()
+                    c = text[0]
+                    is_digit = c.isdigit()
                     isnt_empty = len(r_labels) > 0
                     is_heading = r_labels[title_id] == 'heading'
 
                     if cn_labels[title_id] == 'heading':
                         labels.append('heading')
                     
-                    elif not is_digit and isnt_empty and is_heading:
+                    elif (not is_digit and isnt_empty and is_heading):
                         labels.append('heading')
                     else:
                         labels.append('sub')
@@ -785,5 +793,8 @@ class Document():
         cn_labels = self.sectionByChapterNums()
         r_labels = self.sectionByRatio()
         labels = self.prioritizeLabels(cn_labels, r_labels)
+        print("CN LABELS:", cn_labels)
+        print("RATIO LABELS:", r_labels)
+        print("COMBINED LABELS:", labels)
         self.setSections(labels)
 

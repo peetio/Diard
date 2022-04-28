@@ -3,4 +3,8 @@ Diard is a document image analysis pipeline which extracts semi-structured Analy
 
 ### TODO
 * [ ] Add JavaScript and CSS to the HTML visualizations (add lines that span a single section instead and give the hr under the section heading the same color)
+* [ ] add support for word documents
+* [ ] write script for multiple documents and test
+* [ ] fix section segmentation bug
+
 

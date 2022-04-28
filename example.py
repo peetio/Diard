@@ -16,7 +16,7 @@ def main():
     weights_path = './resources/weights/publaynet_dit-l_cascade.pth'
     predictor, metadata = initializeModel(config_path, weights_path)
 
-    document_path = './resources/pdfs/example.pdf'
+    document_path = './resources/pdfs/example4.pdf'
     document = Document(document_path, predictor=predictor, metadata=metadata)
     
     document.docToImages()
