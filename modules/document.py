@@ -184,11 +184,12 @@ class Document():
 
 
     @staticmethod
-    def getListSpan(text):
+    def getListSpan(text, section):
         """Gets HTML code representing a list
 
         Args:
             text (string): content (text) of document object
+            section (int): the current document section
         
         Returns:
             string: a string containing an HTML representation of a list
@@ -201,7 +202,7 @@ class Document():
         #   Remove empty lines (trailing '\n')
         split_text = [line for line in split_text if line != '']
 
-        html_span = "<ul>"
+        html_span = '<ul class="'+str(section)+'">'
 
         for list_item in split_text:
             html_span += "<li>"+list_item+"</li>"
@@ -213,12 +214,13 @@ class Document():
 
 
     @staticmethod
-    def getTextSpan(text, filetype):
+    def getTextSpan(text, filetype, section):
         """Gets HTML code representing a paragraph or title depending on the type
 
         Args:
             text (string): content (text) of document object
             filetype (string): type of the document object
+            section (int): the current document section
         
         Returns:
             HTML code string representing text
@@ -228,22 +230,23 @@ class Document():
         text = text .replace("\f", '')
 
         if filetype == 'text':
-            html_span = "<p>"+text+"</p>"
+            html_span = '<p class="'+str(section)+'">'+text+"</p>"
 
         elif filetype == 'title':
-            html_span = "<h1>"+text+"</h1>"
+            html_span = '<h1 class="'+str(section)+'">'+text+"</h1>"
         
         return html_span
 
 
 
     @staticmethod
-    def getImageSpan(path, coords):
+    def getImageSpan(path, coords, section):
         """Gets HTML code representing an image
 
         Args:
             abs_path (string): absolute path to the image
             coords (tuple): top left and bottom right bounding box coordinates (x1, y1, x2, y2)
+            section (int): the current document section
         
         Returns:
             HTML code string representing a figure
@@ -252,36 +255,38 @@ class Document():
         x1, y1, x2, y2 = coords
         width = str((x2-x1)//2)
         height = str((y2-y1)//2)
-        html_span = "<img src=\""+path+"\" alt=\"document figure\" width=\""+width+"\" height=\""+height+"\">"
+        html_span = '<img src="'+path+'" class="'+str(section)+'" ' + 'alt="document figure" width="'+width+'" height="'+height+'">'
 
         return html_span
 
 
 
     @staticmethod
-    def getHtmlSpanByType(block):
+    def getHtmlSpanByType(block, section):
         """Gets HTML code representing a document objects content based on its type
 
         Args:
             block (layoutparser.elements.TextBlock): TextBlock obj containing document object data
+            section (int): the current document section
         
         Returns:
             a string containing an HTML representation of document object
         """
+        #   TODO: now it only works with section, make it also useable without section segmentation
 
         filetype = block.type.lower()
         text = str(block.text)
 
         if(filetype in ['text', 'title']):
-            html_span = Document.getTextSpan(text, filetype)
+            html_span = Document.getTextSpan(text, filetype, section)
                     
         #   TODO: add table support
         elif(filetype in ['figure', 'table']):
             coords = block.block.coordinates
-            html_span = Document.getImageSpan(text, coords)
+            html_span = Document.getImageSpan(text, coords, section)
                     
         elif(filetype == 'list'):
-            html_span = Document.getListSpan(text)
+            html_span = Document.getListSpan(text, section)
                
         return html_span
 
@@ -540,27 +545,31 @@ class Document():
             HTML representation of a single document page layout
         """
 
-        single = False
         if section is None:
+            html = ""
             single = True
-            section=-1
+            section=0
+        else:
+            html = '<link rel="stylesheet" href="../../../resources/stylesheet.css">' 
+            html += '<script src="../../../resources/stylescript.js"></script>'
+            html += '<body>'
+            single = False
 
-        html = ""
         for b in self.layouts[page]:
-            html_span = self.getHtmlSpanByType(b)
-            html+=html_span
             try:
                 new_section = not b.section == section
                 is_title = b.type == 'title'
                 if new_section and is_title:
                     section = b.section
-                    html+='<hr>'
             except AttributeError:
                 #   no section segmentation used
                 pass
 
+            html_span = self.getHtmlSpanByType(b, section)
+            html+=html_span
+
         if single: 
-            return html
+            return html+'</body'
         else: 
             return (html, section)
 
@@ -573,11 +582,15 @@ class Document():
             HTML representation of whole document layout
         """
 
-        html=""
-        section=-1
+        html = '<link rel="stylesheet" href="../../../resources/stylesheet.css">' 
+        html += '<script src="../../../resources/stylescript.js"></script>'
+        html += '<body>'
+        section=0
         for page in range(len(self.layouts)):
             html_span, section = self.getLayoutHtml(page, section)
             html+=html_span
+
+        html += '</body>'
         return html
 
 
