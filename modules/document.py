@@ -3,8 +3,10 @@ import os
 import cv2
 import logging
 import json
+import jenkspy
 import layoutparser as lp
 import numpy as np
+import pandas as pd
 from pytesseract import image_to_string
 
 from tqdm import tqdm
@@ -43,6 +45,150 @@ class Document():
             block.set(text=save_path, inplace=True)
         else:
             logging.warning(f'Block of type \'{b_type}\' not supported.')
+
+
+
+    @staticmethod
+    def getRatio(coords, text):
+        """Gets the surface over char count ratio
+
+        Args:
+            coords (tuple): top left and bottom right bounding box coordinates (x1, y1, x2, y2)
+            text (string): extracted text from title object
+
+        Returns:
+            an integer representing surface / char count (ratio) of a title
+        """ 
+
+        #   set content & get first line of title
+        text = text.strip()
+        split_text = text.split("\n")
+        first_line = split_text[0]
+
+        char_count = len(first_line)
+
+        x1, y1, x2, y2 = coords  #   TODO: check if this extraction works
+        width = x2 - x1
+        height = y2 - y1
+
+        #   get surface covering only the first line of the title
+        surface = width * (height / len(split_text))
+
+        if char_count > 0:
+            ratio = surface / char_count
+        else: ratio = 0
+
+        return ratio
+
+
+
+    @staticmethod
+    def applyJenks(ratios, n_classes=3):
+        """Jenks Natural Breaks Optimization to find similar titles
+
+        Args:
+            ratios (list): list containing surface/ char count ratio for each title
+            n_classes (int): number of classes used, should be 3 for heading, sub heading, and outliers
+
+        Returns:
+            list with labels for each title at corresponding index
+        """
+
+        #   add id for re-identification, [[id, ratio value], ...]
+        ratios_id = [[i,ratio] for i, ratio in enumerate(ratios)]
+
+        #   sort by ratio
+        ratios_id = sorted(ratios_id, key=lambda ratio:ratio[1])
+
+        values = [ratio[1] for ratio in ratios_id]
+        breaks = jenkspy.jenks_breaks(values, nb_class=n_classes)
+        labels = pd.cut(values,
+                              bins=breaks, 
+                              labels=[0, 1, 2],
+                              include_lowest=True)
+
+        #   reorder title ratios with re-identification
+        reordered_labels = labels.copy()
+        for i, label in enumerate(labels):
+            reordered_labels[ratios_id[i][0]] = label
+            
+        return reordered_labels
+
+
+
+    @staticmethod
+    def mapJenksLabels(ratios, labels, label_map = {0 : 'heading', 
+                                    1 : 'sub', 
+                                    2 : 'random'}):
+        """Maps Jenks Algorithm label output to title categories 
+
+        Args:
+            ratios (list): ratio value for each title
+            labels (list): a list where each label corresponds to a title object
+            label_map (dict): label map containing indexed title categories
+
+        Returns:
+            a title category label list
+        """
+ 
+        original_map = {0 : [], 1 : [], 2 : []} 
+
+        for i, label in enumerate(labels):
+            #   save original indexes of labels
+            original_map[label].append(i)
+
+        #   find outlier label by min number of samples
+        outlier_id = 0
+        smallest_len = len(original_map[0])
+        for i in range(len(original_map)):
+            if(len(original_map[i]) <= smallest_len):
+                label_map[i] = 'outliers' 
+                outlier_id = i
+
+        #   start with random outlier ratio
+        random_outlier_ratio = ratios[original_map[outlier_id][0]]
+
+        #   gets index that's not outlier id
+        if (outlier_id in [0, 1]):
+            random_id = [0, 1]
+            random_id.remove(outlier_id)
+            random_id = random_id[0]  
+
+        else: random_id = 0
+
+        min_diff = abs(ratios[original_map[random_id][0]] - random_outlier_ratio)
+        biggest_ratio = 0
+        min_diff_id = 0
+
+        #   find 'heading' & 'sub' labels indexes
+        for i in range(len(original_map)):
+            if (i != outlier_id):
+                random_label_ratio = ratios[original_map[i][0]]
+                ratio_diff = abs(random_label_ratio - random_outlier_ratio)
+                
+                if(random_label_ratio >= biggest_ratio):
+                    biggest_ratio = random_label_ratio
+
+                    #   map remaining labels
+                    label_map[i] = 'heading' 
+                    for j in range(len(original_map)):
+                        if j not in [outlier_id, i]:
+                            label_map[j] = 'sub' 
+
+                if(ratio_diff <= min_diff):
+                    min_diff = ratio_diff
+                    min_diff_id = i
+            
+            #   merge outliers with closest neighbouring category
+            if (i == len(original_map)-1):
+                label_map[outlier_id] = label_map[min_diff_id]
+
+        #   map every label in original label list 
+        mapped_labels = []
+        for label in labels:
+            mapped_labels.append(label_map[label])
+
+        return mapped_labels
 
 
 
@@ -98,7 +244,7 @@ class Document():
 
         self.metadata = metadata
         self.predictor = predictor
-        self.layouts = []   #   TODO: 26 Apr - do we allow initialization of layouts, or do we do this directly through a method where one can load the data from a JSON file for example?
+        self.layouts = []
         self.label_map = label_map
     
 
@@ -152,13 +298,10 @@ class Document():
             if visualize:
                 self.visualizePredictions(predicts, img, page)
 
-            if segment_sections:
-                #   TODO: 26 Apr - add section segmentation (in new function in other module)
-                pass
+        if segment_sections:
+            self.segmentSections()
 
 
-
-    #   TODO: maybe add function to order only one layout if this is useful
     def orderLayouts(self):
         """Orders each page's layout based object bounding boxes"""
 
@@ -215,7 +358,11 @@ class Document():
 
         
     def getLayoutsJson(self):
-        """Gets JSON object representing the whole document layout"""
+        """Gets JSON object representing the whole document layout
+
+        Returns:
+            JSON objects (dicts) containing whole document layout
+        """
         
         layouts_json = []
         for page in range(len(self.layouts)):
@@ -232,7 +379,6 @@ class Document():
             page (int): page number of document
         """
 
-        #   TODO: check if page number is present
         pages = len(self.layouts)
         if not 0 <= page <= pages-1: 
             raise PageNumberError(page, pages)
@@ -268,6 +414,7 @@ class Document():
         Args:
             layout_json (list): JSON layout representation of single page
         """
+
         blocks = []
         for b in layout_json:
             x1, y1, x2, y2 = b['box']
@@ -277,9 +424,8 @@ class Document():
                             id=b['id'],
                             type=self.label_map.index(b['type']))
             blocks.append(block)
-        #   TODO: create layout object from the blocks
-        self.layouts.append(lp.Layout(blocks=blocks))
 
+        self.layouts.append(lp.Layout(blocks=blocks))
 
 
     def loadLayoutFromJson(self, filename):
@@ -295,23 +441,158 @@ class Document():
         with open(json_path, 'r') as f:
             layout_json = json.load(f)
 
-        #   TODO: here you have to check if the json file that is being loaded is a single JSON file, or a JSON file containing a whole document
-        #if len(layout_json) > 1:
-
+        #   single or joined layouts file check based on list dimensionality
         dims = self.getLayoutJsonDims(l=layout_json)
-
         if dims == 1:
             self.jsonToLayout(layout_json)
         elif dims == 2:
-            #   TODO: add support for whole document layout JSONs
             for layout in layout_json:
                 self.jsonToLayout(layout)
         else:
             raise InputJsonStructureError(filename)
-    #   TODO: add function to load layout objects from JSON files
 
 
-    #   TODO: add advanced HTML exportation (w/ CSS file this time for additional information and styling)
 
-    #   TODO: add section segmentation method
-    #           Note that you add a parameter to the saveLayoutsAsJson(self, page, +sections=Treu) where if sections True the output json contains of a list of lists. This is the same when exporting the joined json file. But when exporting the sections, the page numbering is not used to split the different objects. In other words, instead of having a list of pages which each contain a list of objects belonging to that page, we will then have a list of sections which each contain a list of objects belonging to that section. But for this you first need to implement section clustering. Note that the section clustering should just set a new attribute (section=section_number) and not change the structure of the self.layouts attribute! Handling which object belongs to which section has to be done when exporting the data.
+    def sectionByChapterNums(self):
+        """Finds sections based on the chapter numbering
+
+        Returns:
+            a label list where each item corresponds to a title object
+        """
+
+        curr_chapter = None
+        labels = []
+        for layout in self.layouts:
+            for b in layout:
+                if b.type.lower() == 'title':
+                    chapter= ""
+                    for t in b.text:
+                        if t.isdigit():
+                            chapter+=(t)
+                        else: break
+
+                    #   compare first digit of title w/ previous
+                    if (len(chapter) > 0 and 
+                                chapter != curr_chapter):
+
+                        curr_chapter = chapter 
+                        labels.append('heading')
+                    else:
+                        labels.append('sub')
+
+        return labels 
+
+
+
+
+    def getTitleRatios(self):
+        """Gets the ratio (bounding box surface / char count) for each title
+
+        Returns:
+            list containing ratio for each title
+        """
+
+        ratios = [] 
+        for layout in self.layouts:
+            for b in layout:
+                if b.type.lower() == 'title':
+                    t = b.text
+                    ratio = self.getRatio(b.block.coordinates, t)
+                    ratios.append(ratio)
+                        
+        return ratios 
+
+
+
+    def prioritizeLabels(self, cn_labels, r_labels):
+        """Compares segmentation method outputs to get best of both worlds
+
+        Args:
+            cn_labels (list): chapter numbering section segmentation output labels
+            r_labels (list): natural breaks section segmentation output labels
+
+        Returns:
+            a list containing the combined labels
+        """
+
+        labels =  []
+        title_id = 0
+
+        for layout in self.layouts:
+            for b in layout:
+                if b.type.lower() == "title":
+                    #   prioritize numbered chapter headings
+                    is_digit = b.text[0].isdigit()
+                    isnt_empty = len(r_labels) > 0
+                    is_heading = r_labels[title_id] == 'heading'
+
+                    if cn_labels[title_id] == 'heading':
+                        labels.append('heading')
+                    
+                    elif not is_digit and isnt_empty and is_heading:
+                        labels.append('heading')
+                    else:
+                        labels.append('sub')
+
+                    title_id+=1
+
+        return labels
+
+
+
+    def sectionByRatio(self):
+        """Finds sections based on ratio (bounding box surface / char count)
+
+        Returns:
+            a label list where each item corresponds to a title object
+        """
+
+        n_classes = 3   #   heading, sub heading, outliers
+        mapped_labels = []
+        ratios = self.getTitleRatios()
+
+        if len(ratios) > n_classes:
+            labels = self.applyJenks(ratios, n_classes)
+            mapped_labels = self.mapJenksLabels(ratios, labels)
+        else:
+            logging.warning(f'Not enough titles detected in \'{self.name}\' to find natural breaks, using only chapter numbering. Minimum number of titles is {n_classes}')
+
+        return mapped_labels 
+
+
+
+    def setSections(self, labels):
+        """Sets section to which each document object belongs
+
+        Args:
+            labels (list): a list where each label corresponds to a title object
+        """
+
+        section = 0
+        title_id = 0
+        for layout in self.layouts:
+            for b in layout:
+                #   Check if its section heading
+                if b.type.lower() == "title":
+                    if(labels[title_id] == 'heading'):
+                        section += 1
+                    title_id+=1
+                b.section = section 
+
+
+        
+    def segmentSections(self):
+        """Segments sections based on numbering and natural breaks"""
+        
+        cn_labels = self.sectionByChapterNums()
+        r_labels = self.sectionByRatio()
+        labels = self.prioritizeLabels(cn_labels, r_labels)
+        self.setSections(labels)
+        print("Numbering labels:", cn_labels)
+        print("Jenks Labels:", r_labels)
+        print("Combined labels:", labels)
+        print("Do we have sections now?:", self.layouts)
+
+    #   TODO: add advanced HTML exportation (w/ CSS file this time for additional information and styling) the css file should be located in resources or something and accessed with an absolute path
+
+

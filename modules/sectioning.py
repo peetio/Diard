@@ -298,6 +298,7 @@ def classifyLabels(titles, labels):
     return mapped_labels
 
 
+
 #   Chapter Numbering Section Segmentation
 def sectionByChapterNumbering(json_content):
     """Segments the sections based on the chapter numbering

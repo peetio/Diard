@@ -20,7 +20,7 @@ def main():
     document = Document(document_path, predictor=predictor, metadata=metadata)
     
     document.docToImages()
-    document.extractLayouts(visualize=True)
+    document.extractLayouts(visualize=True, segment_sections=True)
     document.orderLayouts()
     document.saveLayoutAsJson(2)
 
