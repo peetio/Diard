@@ -8,7 +8,12 @@ from ditod import add_vit_config
 from torch import cuda
 
 
-def initializeModel(config_path, weights_path, threshold=0.75, label_map=["text","title","list","table","figure"]):
+def initializeModel(
+    config_path,
+    weights_path,
+    threshold=0.75,
+    label_map=["text", "title", "list", "table", "figure"],
+):
     """Gets predictor and metadata
 
     Args:
@@ -21,7 +26,9 @@ def initializeModel(config_path, weights_path, threshold=0.75, label_map=["text"
         predictor and metadata respectively
     """
 
-    logging.info(f'[Utils] Initializing model with a default threshold of {threshold} and the following label map: {label_map}')
+    logging.info(
+        f"[Utils] Initializing model with a default threshold of {threshold} and the following label map: {label_map}"
+    )
     opts = ["MODEL.WEIGHTS", weights_path]
 
     # instantiate config
@@ -31,7 +38,7 @@ def initializeModel(config_path, weights_path, threshold=0.75, label_map=["text"
 
     # add model weights URL to config
     cfg.merge_from_list(opts)
-    
+
     # set device
     device = "cuda" if cuda.is_available() else "cpu"
     cfg.MODEL.DEVICE = device
@@ -45,4 +52,3 @@ def initializeModel(config_path, weights_path, threshold=0.75, label_map=["text"
     metadata.set(thing_classes=label_map)
 
     return predictor, metadata
-

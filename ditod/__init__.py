@@ -9,4 +9,3 @@
 
 from .config import add_vit_config
 from .backbone import build_vit_fpn_backbone
-
