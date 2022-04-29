@@ -233,7 +233,7 @@ class Document():
             html_span = '<p class="'+str(section)+'">'+text+"</p>"
 
         elif filetype == 'title':
-            html_span = '<h1 class="'+str(section)+'">'+text+"</h1>"
+            html_span = '<h2 class="'+str(section)+'">'+text+"</h2>"
         
         return html_span
 
@@ -751,9 +751,7 @@ class Document():
                 if b.type.lower() == "title":
                     #   prioritize numbered chapter headings
                     text = b.text.strip()
-                    print("Title text:", text)
                     c = text[0]
-                    print("First char:", c)
                     is_digit = c.isdigit()
                     isnt_empty = len(r_labels) > 0
                     is_heading = r_labels[title_id] == 'heading'
@@ -818,8 +816,5 @@ class Document():
         cn_labels = self.sectionByChapterNums()
         r_labels = self.sectionByRatio()
         labels = self.prioritizeLabels(cn_labels, r_labels)
-        print("CN LABELS:", cn_labels)
-        print("RATIO LABELS:", r_labels)
-        print("COMBINED LABELS:", labels)
         self.setSections(labels)
 

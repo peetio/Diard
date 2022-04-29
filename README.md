@@ -1,3 +1,7 @@
+<p align="center">
+<img src="resources/images/example.png" width="700"/>
+</p>
+
 # Table of Contents
 - [Diard Introduction](#diard-introduction)
 - [Environment Setup](#environment-setup)
@@ -67,10 +71,8 @@ Diard
 ### TODO
 * [ ] add support for word documents
 * [ ] add script for multiple documents and test
-* [ ] add tests
 * [ ] use of absolute paths for dir structure independence
 * [ ] add jupyter notebook examples
 * [ ] add docs where you explain all the methods and functionality and how you can extend the project + how you can use it with section clustering pipeline when that is finished
-* [ ] put up a download link for the pre-trained DiT model on personal Google Drive and link to it in installation.md STEP 8
-
+* [ ] add support for the english language
 
