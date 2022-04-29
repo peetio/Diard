@@ -1,22 +1,23 @@
 #   Document class definition
-import os
-import cv2
-import logging
 import json
+import logging
+import os
+from pathlib import Path
+
+import cv2
 import jenkspy
 import layoutparser as lp
 import numpy as np
 import pandas as pd
-from pytesseract import image_to_string
-
-from tqdm import tqdm
-from pathlib import Path
-from pdf2image import convert_from_path
 from detectron2.utils.visualizer import ColorMode, Visualizer
-from layoutparser.elements import TextBlock, Rectangle
+from layoutparser.elements import Rectangle, TextBlock
+from pdf2image import convert_from_path
+from pytesseract import image_to_string
+from tqdm import tqdm
 
-from modules.exceptions import DocumentFileFormatError, UnsetAttributeError, PageNumberError, InputJsonStructureError
-
+from modules.exceptions import (DocumentFileFormatError,
+                                InputJsonStructureError, PageNumberError,
+                                UnsetAttributeError)
 
 
 class Document():

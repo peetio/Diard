@@ -1,8 +1,9 @@
 import logging
 import warnings
 
-from modules.utils import initializeModel
 from modules.document import Document
+from modules.utils import initializeModel
+
 
 def main():
     logging.basicConfig(format='%(asctime)s | %(levelname)s: %(message)s', level=logging.NOTSET)

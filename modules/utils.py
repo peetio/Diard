@@ -1,12 +1,12 @@
 #   General utils
-import logging 
+import logging
 
-from torch import cuda
 from detectron2.config import get_cfg
 from detectron2.data import MetadataCatalog
 from detectron2.engine import DefaultPredictor
-
 from ditod import add_vit_config
+from torch import cuda
+
 
 def initializeModel(config_path, weights_path, threshold=0.75, label_map=["text","title","list","table","figure"]):
     """Gets predictor and metadata
