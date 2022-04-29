@@ -38,9 +38,7 @@ pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@v
 
 ## Step 5: PyTesseract
 
-A Tesseract OCR Python Wrapper is used for text recognition. For more information about the installation you can refer to the [pytesseract](https://github.com/madmaze/pytesseract) GitHub repo.
-
-#TODO: test this installation on another machine because you might have to add it to env vars and stuff...
+A Tesseract OCR Python wrapper is used for text recognition. For more information about the installation you can refer to the [pytesseract](https://github.com/madmaze/pytesseract) GitHub repo.
 
 ```bash
 pip install pip install pytesseract
@@ -51,8 +49,7 @@ pip install pip install pytesseract
 For more information about this DIA toolkit you can refer to the [Layout Parser GitHub repository](https://github.com/Layout-Parser/layout-parser). The two install commands below should suffice if you just want to test the pipeline.
 
 ```bash
-pip install layoutparser # Base library
-pip install "layoutparser[ocr]" # OCR toolkit # TODO: still used in Diard version? Try it out..
+pip install layoutparser
 ```
 
 ## STEP 7: Python Libraries
@@ -63,3 +60,5 @@ Install the required Python libraries from the root of the repository. You can a
 pip install -r requirements.txt
 ```
 
+## STEP 8: Downloading Models
+After your environment is set up, you should download the pre-trained model weights from [this link](https://layoutlm.blob.core.windows.net/dit/dit-fts/publaynet_dit-l_cascade.pth) (1.4GB) and place it in the './resources/weights/' directory.

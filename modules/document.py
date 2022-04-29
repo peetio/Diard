@@ -561,6 +561,7 @@ class Document():
                 is_title = b.type == 'title'
                 if new_section and is_title:
                     section = b.section
+                    html+='<hr class="'+str(section)+'">'
             except AttributeError:
                 #   no section segmentation used
                 pass

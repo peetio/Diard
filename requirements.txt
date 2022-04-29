@@ -5,4 +5,3 @@ pdf2image
 tqdm
 scikit-learn
 jenkspy
-tesserocr
