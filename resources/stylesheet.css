@@ -1,7 +1,8 @@
 body {
   margin: auto;
-  max-width: 800px;
+  max-width: 2000px;
   font-size: 16px;
+  position: relative;
 }
 
 /* Layout Styling */
@@ -12,14 +13,18 @@ h2, p, ul, img {
 
 /* Table of Contents styling */ 
 
+div.toc_container {
+  display: none;
+}
 .toc {
-  width: 300px;
+  width: 420px;
   font-family: 'Roboto Condensed', sans-serif;
 }
 
 .toc h4 {
   color: #6e6e6e;
   font-size: 0.8rem;
+  padding-top: 20px;
 }
 
 .toc hr {
@@ -94,8 +99,35 @@ button {
   text-align: left;
 }
 
+div.toc_container{
+  width: 450px;
+  height: 100%;
+  position: relative;
+}
 
+div.toc_container div.toc {
+  overflow-y: scroll;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  padding-left: 30px;
+}
 
+div#layout {
+  display: inline-block;
+  width: 60%;
+}
+
+a {
+  text-decoration: none;
+  color: black;
+}
+
+@media only screen and (min-width: 1200px) {
+  div.toc_container{
+    display: inline-block;
+  }
+}
 
 
 /* TODO: add style sheet import to html code*/

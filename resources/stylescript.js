@@ -3,7 +3,7 @@ var color_n = 0;
 var curr_section = 0;
 var block;
 
-function addSectionToTOC(text, color, table, has_sub) {
+function addSectionToTOC(text, color, table, title_id, has_sub) {
   let container = document.createElement("div");
   let button = document.createElement("button");
   button.type = "button";
@@ -27,8 +27,12 @@ function addSectionToTOC(text, color, table, has_sub) {
   icon_p.appendChild(icon);
   button.appendChild(icon_p);
 
+  let link = document.createElement("a")
+  link.href = '#' + title_id;
+  link.innerHTML = text;
+
   let title = document.createElement("p");
-  title.innerHTML = text;
+  title.appendChild(link)
   button.appendChild(title);
 
   let hr = document.createElement("hr");
@@ -42,9 +46,12 @@ function addSectionToTOC(text, color, table, has_sub) {
   table.appendChild(container);
 }
 
-function addSubSectionToTOC(text, sub_section) {
+function addSubSectionToTOC(text, sub_section, title_id) {
   let sub_title = document.createElement("p");
-  sub_title.innerHTML = text;
+  let link = document.createElement("a")
+  link.href = '#' + title_id;
+  link.innerHTML = text;
+  sub_title.appendChild(link);
   sub_section.appendChild(sub_title);
 
   let hr = document.createElement("hr");
@@ -103,14 +110,16 @@ window.addEventListener('load', function () {
         }
         if (tag == 'H2'){
           sibling = block.nextElementSibling;
+          title_id = block.id;
           has_sub = hasSubSections(section, sibling);
-          addSectionToTOC(text, colors[color_n], table, has_sub);
+          addSectionToTOC(text, colors[color_n], table, title_id, has_sub);
         }
       }
       else {
         if (tag == 'H2'){
           if (typeof sub_section !== 'undefined') {
-            addSubSectionToTOC(text, sub_section);
+            title_id = block.id;
+            addSubSectionToTOC(text, sub_section, title_id);
           }
         }
       }

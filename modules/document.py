@@ -2,7 +2,6 @@
 import json
 import logging
 import os
-import yake
 from pathlib import Path
 
 import cv2
@@ -25,7 +24,6 @@ from modules.exceptions import (
 
 
 class Document:
-    yake_kwe = yake.KeywordExtractor(lan='de')
 
     @staticmethod
     def getRatio(coords, text):
@@ -256,8 +254,7 @@ class Document:
         #   Remove empty lines (trailing '\n')
         split_text = [line for line in split_text if line != ""]
 
-        keyword = cls.yake_kwe.extract_keywords(text)[-1][0]
-        html_span = '<ul class="' + str(section) + ' '  + keyword + '">'
+        html_span = '<ul class="' + str(section) + '">'
 
         for list_item in split_text:
             html_span += "<li>" + list_item + "</li>"
@@ -280,13 +277,13 @@ class Document:
         """
 
         text = text.replace("\f", "")
-        keyword = cls.yake_kwe.extract_keywords(text)[-1][0]
 
         if filetype == "text":
-            html_span = '<p class="' + str(section) + ' ' + keyword + '">' + text + "</p>"
+            html_span = '<p class="' + str(section) + '">' + text + "</p>"
 
         elif filetype == "title":
-            html_span = '<h2 class="' + str(section) + '">' + text + "</h2>"
+            title_id = str(section) + text[0] + '-' + str(len(text))
+            html_span = '<h2 class="' + str(section) + '" id="' + title_id + '">' + text + "</h2>"
 
         return html_span
 
@@ -587,9 +584,10 @@ class Document:
             + '<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed&display=swap" rel="stylesheet">'
             + '<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">'
             + '<script src="../../../resources/stylescript.js"></script>'
+            + '<div class="toc_container">'
             + '<div class="toc">'
             + '<h4>TABLE OF CONTENTS</h4>'
-            + '<div class="table"></div></div>'
+            + '<div class="table"></div></div></div>'
             + '<div id="layout">'
             + '<body>')
         section = 0
