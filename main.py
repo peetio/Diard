@@ -30,7 +30,7 @@ def main():
     document.extractLayouts(visualize=True, segment_sections=True)
     document.orderLayouts()
     document.saveLayoutsAsJson()
-    document.saveLayoutsAsHtml()
+    document.saveLayoutsAsHtml()    #   TODO: add table of contents on left side of scree
 
 
 if __name__ == "__main__":

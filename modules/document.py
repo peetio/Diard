@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+import yake
 from pathlib import Path
 
 import cv2
@@ -24,6 +25,8 @@ from modules.exceptions import (
 
 
 class Document:
+    yake_kwe = yake.KeywordExtractor(lan='de')
+
     @staticmethod
     def getRatio(coords, text):
         """Gets the surface over char count ratio
@@ -177,51 +180,30 @@ class Document:
         return cls.getLayoutJsonDims(l[0], (dims + 1))
 
     @staticmethod
-    def getListSpan(text, section):
-        """Gets HTML code representing a list
+    def getHtmlSpanByType(block, section):
+        """Gets HTML code representing a document objects content based on its type
 
         Args:
-            text (string): content (text) of document object
+            block (layoutparser.elements.TextBlock): TextBlock obj containing document object data
             section (int): the current document section
 
         Returns:
-            string: a string containing an HTML representation of a list
+            a string containing an HTML representation of document object
         """
 
-        split_text = text.replace("\f", "").split("\n")
+        filetype = block.type.lower()
+        text = str(block.text)
 
-        #   Remove empty lines (trailing '\n')
-        split_text = [line for line in split_text if line != ""]
+        if filetype in ["text", "title"]:
+            html_span = Document.getTextSpan(text, filetype, section)
 
-        html_span = '<ul class="' + str(section) + '">'
+        #   TODO: add table support
+        elif filetype in ["figure", "table"]:
+            coords = block.block.coordinates
+            html_span = Document.getImageSpan(text, coords, section)
 
-        for list_item in split_text:
-            html_span += "<li>" + list_item + "</li>"
-
-        html_span += "</ul>"
-
-        return html_span
-
-    @staticmethod
-    def getTextSpan(text, filetype, section):
-        """Gets HTML code representing a paragraph or title depending on the type
-
-        Args:
-            text (string): content (text) of document object
-            filetype (string): type of the document object
-            section (int): the current document section
-
-        Returns:
-            HTML code string representing text
-        """
-
-        text = text.replace("\f", "")
-
-        if filetype == "text":
-            html_span = '<p class="' + str(section) + '">' + text + "</p>"
-
-        elif filetype == "title":
-            html_span = '<h2 class="' + str(section) + '">' + text + "</h2>"
+        elif filetype == "list":
+            html_span = Document.getListSpan(text, section)
 
         return html_span
 
@@ -246,6 +228,7 @@ class Document:
             + path
             + '" class="'
             + str(section)
+            + ' '
             + '" '
             + 'alt="document figure" width="'
             + width
@@ -256,34 +239,57 @@ class Document:
 
         return html_span
 
-    @staticmethod
-    def getHtmlSpanByType(block, section):
-        """Gets HTML code representing a document objects content based on its type
+    @classmethod
+    def getListSpan(cls, text, section):
+        """Gets HTML code representing a list
 
         Args:
-            block (layoutparser.elements.TextBlock): TextBlock obj containing document object data
+            text (string): content (text) of document object
             section (int): the current document section
 
         Returns:
-            a string containing an HTML representation of document object
+            string: a string containing an HTML representation of a list
         """
-        #   TODO: now it only works with section, make it also useable without section segmentation
 
-        filetype = block.type.lower()
-        text = str(block.text)
+        split_text = text.replace("\f", "").split("\n")
 
-        if filetype in ["text", "title"]:
-            html_span = Document.getTextSpan(text, filetype, section)
+        #   Remove empty lines (trailing '\n')
+        split_text = [line for line in split_text if line != ""]
 
-        #   TODO: add table support
-        elif filetype in ["figure", "table"]:
-            coords = block.block.coordinates
-            html_span = Document.getImageSpan(text, coords, section)
+        keyword = cls.yake_kwe.extract_keywords(text)[-1][0]
+        html_span = '<ul class="' + str(section) + ' '  + keyword + '">'
 
-        elif filetype == "list":
-            html_span = Document.getListSpan(text, section)
+        for list_item in split_text:
+            html_span += "<li>" + list_item + "</li>"
+
+        html_span += "</ul>"
 
         return html_span
+
+    @classmethod
+    def getTextSpan(cls, text, filetype, section):
+        """Gets HTML code representing a paragraph or title depending on the type
+
+        Args:
+            text (string): content (text) of document object
+            filetype (string): type of the document object
+            section (int): the current document section
+
+        Returns:
+            HTML code string representing text
+        """
+
+        text = text.replace("\f", "")
+        keyword = cls.yake_kwe.extract_keywords(text)[-1][0]
+
+        if filetype == "text":
+            html_span = '<p class="' + str(section) + ' ' + keyword + '">' + text + "</p>"
+
+        elif filetype == "title":
+            html_span = '<h2 class="' + str(section) + '">' + text + "</h2>"
+
+        return html_span
+
 
     def __init__(
         self,
