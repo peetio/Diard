@@ -45,6 +45,10 @@ h2, p, ul, img {
   display: none;
 }
 
+.table p {
+  font-size: 1.1rem;
+}
+
 .table .collapsible p {
   display: inline-block;
   padding: 0;
@@ -52,21 +56,13 @@ h2, p, ul, img {
 }
 
 .table .collapsible p:nth-of-type(1) {
+  vertical-align: top;
   width: 10%;
   font-size: 2rem;
 }
 
 .table .collapsible p:nth-of-type(2) {
-  width: 70%;
-}
-.table .collapsible span {
-}
-.table p:nth-of-type(2) {
-  font-size: 1rem;
-}
-
-button span {
-  vertical-align: middle;
+  width: 80%;
 }
 
 button div{

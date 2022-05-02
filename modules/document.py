@@ -548,14 +548,11 @@ class Document:
             HTML representation of a single document page layout
         """
 
+        html = ""
         if section is None:
-            html = ""
             single = True
             section = 0
         else:
-            html = '<link rel="stylesheet" href="../../../resources/stylesheet.css">'
-            html += '<script src="../../../resources/stylescript.js"></script>'
-            html += "<body>"
             single = False
 
         for b in self.layouts[page]:
@@ -564,7 +561,6 @@ class Document:
                 is_title = b.type == "title"
                 if new_section and is_title:
                     section = b.section
-                    html += '<hr class="' + str(section) + '">'
             except AttributeError:
                 #   no section segmentation used
                 pass
@@ -573,7 +569,7 @@ class Document:
             html += html_span
 
         if single:
-            return html + "</body"
+            return html + "</body>"
         else:
             return (html, section)
 
@@ -584,15 +580,24 @@ class Document:
             HTML representation of whole document layout
         """
 
-        html = '<link rel="stylesheet" href="../../../resources/stylesheet.css">'
-        html += '<script src="../../../resources/stylescript.js"></script>'
-        html += "<body>"
+        html = (
+            '<link rel="stylesheet" href="../../../resources/stylesheet.css">'
+            + '<link rel="preconnect" href="https://fonts.googleapis.com">'
+            + '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+            + '<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed&display=swap" rel="stylesheet">'
+            + '<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">'
+            + '<script src="../../../resources/stylescript.js"></script>'
+            + '<div class="toc">'
+            + '<h4>TABLE OF CONTENTS</h4>'
+            + '<div class="table"></div></div>'
+            + '<div id="layout">'
+            + '<body>')
         section = 0
         for page in range(len(self.layouts)):
             html_span, section = self.getLayoutHtml(page, section)
             html += html_span
 
-        html += "</body>"
+        html += "</div></body>"
         return html
 
     def saveLayoutAsHtml(self, page):
