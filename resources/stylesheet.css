@@ -3,6 +3,8 @@ body {
 	max-width: 2000px;
 	font-size: 16px;
 	position: relative;
+	font-family: 'Roboto Condensed', sans-serif;
+  font-size: 1.2rem;
 }
 
 /* Layout Styling */
@@ -21,7 +23,6 @@ div.toc_container {
 
 .toc {
 	width: 420px;
-	font-family: 'Roboto Condensed', sans-serif;
 }
 
 .toc h4 {
