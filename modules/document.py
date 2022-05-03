@@ -332,15 +332,24 @@ class Document:
         self.predictor = predictor
         self.layouts = []
         self.label_map = label_map
+        self.ordered = False
 
     def docToImages(self):
         """Converts each page of a document to images"""
-        #   TODO: add word document support
+        #   TODO: add .docx document support
         pil_imgs = convert_from_path(self.source_path)
-        self.images = [np.asarray(img) for img in pil_imgs]
+        self.images = [cv2.cvtColor(np.asarray(img), cv2.COLOR_BGR2RGB) for img in pil_imgs]
 
-    def setExtractedData(self, b_type, block, img, page):
-        """Extracts and sets content of document object (block)"""
+    def setExtractedData(self, b_type, block, img, page, idx):
+        """Extracts and sets content of document object (block)
+
+        Args:
+            b_type (string): block type (e.g., figure, text, list)
+            block (layoutparser.elements.TextBlock): TextBlock obj containing document object data
+            img (numpy.ndarray): image of document page
+            page (int): page number the block occurs on
+            idx (int): block id for re-identification of images on same page
+        """
 
         figure_dir = self.output_path + "/figures/"
         Path(figure_dir).mkdir(parents=True, exist_ok=True)
@@ -358,7 +367,7 @@ class Document:
                     "Tables are currently not supported and are therefore processed like figures."
                 )
             snippet = block.crop_image(img)
-            img_name = str(page) + ".jpg"
+            img_name = str(page) + '-' + str(idx) + ".jpg"
             figure_path = figure_dir + img_name
             save_path = "../figures/" + img_name
 
@@ -409,7 +418,7 @@ class Document:
                 )
 
                 b_type = block.type.lower()
-                self.setExtractedData(b_type, block, img, page)
+                self.setExtractedData(b_type, block, img, page, j)
                 blocks.append(block)
 
             self.layouts.append(lp.Layout(blocks=blocks))
@@ -418,19 +427,38 @@ class Document:
                 self.visualizePredictions(predicts, img, page)
 
         if segment_sections:
-            self.orderLayouts()
-            logging.info("Ordering layout for section segmentation.")
+            if not self.ordered:
+                logging.info("Ordering layout for section segmentation.")
+                self.orderLayouts()
+
             self.segmentSections()
 
     def orderLayouts(self):
         """Orders each page's layout based object bounding boxes"""
 
-        #   TODO: add support for Manhattan (page split), parameter of automatic detection of layout type?
-        for page, layout in enumerate(self.layouts):
-            layout = sorted(layout, key=lambda b: b.block.y_1)
-            self.layouts[page] = lp.Layout(
-                [b.set(id=idx) for idx, b in enumerate(layout)]
-            )
+        if not self.ordered:
+            half = self.images[0].shape[1] / 2
+
+            for page, layout in enumerate(self.layouts):
+                #   non-Manhattan layout support
+                #   split layout into based on block center (x-axis)
+                left_layout = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) < half, layout))
+                right_layout = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) >= half, layout))
+
+                #   filter on y-axis page location
+                left_layout= sorted(left_layout, key=lambda b: b.block.y_1)
+                right_layout = sorted(right_layout, key=lambda b: b.block.y_1)
+
+                #   recompose layout
+                left_layout.extend(right_layout)
+                self.layouts[page] = lp.Layout(
+                    [b.set(id=idx) for idx, b in enumerate(left_layout)]
+                )
+
+                self.ordered = True
+
+        else:
+            logging.info("Not re-ordering layout.")
 
     def visualizePredictions(self, predicts, img, index):
         """Saves prediction visualizations

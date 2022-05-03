@@ -74,5 +74,8 @@ Diard
 * [ ] use of absolute paths for dir structure independence
 * [ ] add jupyter notebook examples
 * [ ] add docs where you explain all the methods and functionality and how you can extend the project + how you can use it with section clustering pipeline when that is finished
-* [ ] add support for the english language
+* [ ] add Manhattan layout support (layout ordering)
+* [ ] add support for the English language
+* [ ] add support for the French language
+* [ ] add language detection
 

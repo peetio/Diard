@@ -4,6 +4,7 @@ import warnings
 
 from modules.document import Document
 from modules.utils import initializeModel
+from modules.exceptions import DocumentFileFormatError
 
 
 def main():
@@ -20,7 +21,7 @@ def main():
     #   initialize model
     config_path = "./resources/model_configs/cascade/cascade_dit_large.yaml"
     weights_path = "./resources/weights/publaynet_dit-l_cascade.pth"
-    predictor, metadata = initializeModel(config_path, weights_path, threshold=0.7)
+    predictor, metadata = initializeModel(config_path, weights_path, threshold=0.65)
 
     docs_dir = "./resources/pdfs/"
 
@@ -38,11 +39,12 @@ def main():
 
         #   extract & save layout
         doc.docToImages()
+        #   FIXME: when two figuers are detected right after each other one of them is not saved correctly
+        #   TODO: remove overlapping objects of type type! not possible
         doc.extractLayouts(visualize=True, segment_sections=True)
         doc.orderLayouts()
         doc.saveLayoutsAsJson()
-        doc.saveLayoutsAsHtml()    #   TODO: add table of contents on left side of scree
-
+        doc.saveLayoutsAsHtml()
 
 if __name__ == "__main__":
     main()

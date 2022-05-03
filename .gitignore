@@ -2,6 +2,7 @@ archive/
 diardenv/
 output/
 resources/weights/
+resources/pdfs/*
 modules/__pycache__/
 ditod/__pycache__/
 

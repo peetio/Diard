@@ -16,6 +16,10 @@ img {
 	padding: 15px 0 15px 20px;
 }
 
+img {
+  display: block;
+}
+
 /* Table of Contents styling */
 div.toc_container {
 	display: none;
