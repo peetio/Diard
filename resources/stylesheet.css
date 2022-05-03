@@ -1,135 +1,135 @@
 body {
-  margin: auto;
-  max-width: 2000px;
-  font-size: 16px;
-  position: relative;
+	margin: auto;
+	max-width: 2000px;
+	font-size: 16px;
+	position: relative;
 }
 
 /* Layout Styling */
-h2, p, ul, img {
-  margin: 0;
-  padding: 15px 0 15px 20px;
+h2,
+p,
+ul,
+img {
+	margin: 0;
+	padding: 15px 0 15px 20px;
 }
 
-/* Table of Contents styling */ 
-
+/* Table of Contents styling */
 div.toc_container {
-  display: none;
+	display: none;
 }
+
 .toc {
-  width: 420px;
-  font-family: 'Roboto Condensed', sans-serif;
+	width: 420px;
+	font-family: 'Roboto Condensed', sans-serif;
 }
 
 .toc h4 {
-  color: #6e6e6e;
-  font-size: 0.8rem;
-  padding-top: 20px;
+	color: #6e6e6e;
+	font-size: 0.8rem;
+	padding-top: 20px;
 }
 
 .toc hr {
-  height: 1px;
-  color: #6e6e6e;
-  background-color: #6e6e6e;
-  border: none;
+	height: 1px;
+	color: #6e6e6e;
+	background-color: #6e6e6e;
+	border: none;
 }
 
-.toc div, .toc button {
-  width: 100%;
+.toc div,
+.toc button {
+	width: 100%;
 }
 
 .toc .content hr {
-  margin-top: 0px;
+	margin-top: 0px;
 }
 
 .table .content p {
-  padding: 2px 10px 5px 60px;
+	padding: 2px 10px 5px 60px;
 }
 
 .content {
-  display: none;
+	display: none;
 }
 
 .table p {
-  font-size: 1.1rem;
+	font-size: 1.1rem;
 }
 
 .table .collapsible p {
-  display: inline-block;
-  padding: 0;
-  margin: 0;
+	display: inline-block;
+	padding: 0;
+	margin: 0;
 }
 
 .rotate-90 {
-  -webkit-transform: rotate(-90deg);
-  -moz-transform: rotate(-90deg);
-  -ms-transform: rotate(-90deg);
-  -o-transform: rotate(-90deg);
-  transform: rotate(-90deg);
+	-webkit-transform: rotate(-90deg);
+	-moz-transform: rotate(-90deg);
+	-ms-transform: rotate(-90deg);
+	-o-transform: rotate(-90deg);
+	transform: rotate(-90deg);
 }
 
 .table .collapsible p:nth-of-type(1) {
-  vertical-align: top;
-  width: 10%;
-  font-size: 2rem;
-  text-align: center;
+	vertical-align: top;
+	width: 10%;
+	font-size: 2rem;
+	text-align: center;
 }
 
 .table .collapsible p.dot span {
-  /* If section has no sub headings */
-  font-size: 0.8rem;
+	/* If section has no sub headings */
+	font-size: 0.8rem;
 }
 
 .table .collapsible p:nth-of-type(2) {
-  width: 80%;
+	width: 80%;
 }
 
-button div{
-  display: inline;
-  white-space: nowrap;
+button div {
+	display: inline;
+	white-space: nowrap;
 }
 
 button {
-  background: none;
-  color: inherit;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  outline: none;
-  text-align: left;
+	background: none;
+	color: inherit;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+	outline: none;
+	text-align: left;
 }
 
-div.toc_container{
-  width: 450px;
-  height: 100%;
-  position: relative;
+div.toc_container {
+	width: 450px;
+	height: 100%;
+	position: relative;
 }
 
 div.toc_container div.toc {
-  overflow-y: scroll;
-  height: 100%;
-  position: fixed;
-  top: 0;
-  padding-left: 30px;
+	overflow-y: scroll;
+	height: 100%;
+	position: fixed;
+	top: 0;
+	padding-left: 30px;
 }
 
 div#layout {
-  display: inline-block;
-  width: 60%;
+	display: inline-block;
+	width: 60%;
 }
 
 a {
-  text-decoration: none;
-  color: black;
+	text-decoration: none;
+	color: black;
 }
 
 @media only screen and (min-width: 1200px) {
-  div.toc_container{
-    display: inline-block;
-  }
+	div.toc_container {
+		display: inline-block;
+	}
 }
-
-
-/* TODO: add style sheet import to html code*/
-/* TODO: add body tag to html code*/
 
