@@ -1,3 +1,4 @@
+import os
 import logging
 import warnings
 
@@ -21,16 +22,26 @@ def main():
     weights_path = "./resources/weights/publaynet_dit-l_cascade.pth"
     predictor, metadata = initializeModel(config_path, weights_path, threshold=0.7)
 
-    #   create Document instance
-    document_path = "./resources/pdfs/example.pdf"
-    document = Document(document_path, predictor=predictor, metadata=metadata)
+    docs_dir = "./resources/pdfs/"
 
-    #   extract & save layout
-    document.docToImages()
-    document.extractLayouts(visualize=True, segment_sections=True)
-    document.orderLayouts()
-    document.saveLayoutsAsJson()
-    document.saveLayoutsAsHtml()    #   TODO: add table of contents on left side of scree
+    #   process single pdf
+    #document_paths = docs_dir + "example.pdf"
+    
+    #   process multiple pdfs
+    filenames = os.listdir(docs_dir)
+
+    for filename in filenames:
+        #   create Document instance
+        doc_path = docs_dir + filename
+        print("document path:", doc_path)
+        doc = Document(doc_path, predictor=predictor, metadata=metadata)
+
+        #   extract & save layout
+        doc.docToImages()
+        doc.extractLayouts(visualize=True, segment_sections=True)
+        doc.orderLayouts()
+        doc.saveLayoutsAsJson()
+        doc.saveLayoutsAsHtml()    #   TODO: add table of contents on left side of scree
 
 
 if __name__ == "__main__":
