@@ -506,15 +506,18 @@ class Document:
 
         layout_json = []
         for block in self.layouts[page]:
-            layout_json.append(
-                {
+            el = {
                     "id": block.id,
                     "type": block.type,
                     "content": block.text,
                     "box": block.coordinates,
                     "page": page,
                 }
-            )
+            try:
+                if block.section:
+                    el['section'] = block.section
+            except AttributeError: pass
+            layout_json.append(el)
 
         return layout_json
 
@@ -768,10 +771,15 @@ class Document:
                 if b.type.lower() == "title":
                     #   prioritize numbered chapter headings
                     text = b.text.strip()
-                    c = text[0]
-                    is_digit = c.isdigit()
+                    is_digit = False
+                    if len(text) > 0:
+                        c = text[0]
+                        is_digit = c.isdigit()
+
                     isnt_empty = len(r_labels) > 0
-                    is_heading = r_labels[title_id] == "heading"
+                    is_heading = False
+                    if isnt_empty:
+                        is_heading = r_labels[title_id] == "heading"
 
                     if cn_labels[title_id] == "heading":
                         labels.append("heading")

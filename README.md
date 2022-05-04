@@ -77,3 +77,5 @@ Diard
 * [ ] add support for the English language
 * [ ] add support for the French language
 * [ ] add language detection
+* [ ] add automatic rotation/ align
+* [ ] add support for page which are split in three (add "n split detection up to three")
