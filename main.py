@@ -39,8 +39,6 @@ def main():
 
         #   extract & save layout
         doc.docToImages()
-        #   FIXME: when two figuers are detected right after each other one of them is not saved correctly
-        #   TODO: remove overlapping objects of type type! not possible
         doc.extractLayouts(visualize=True, segment_sections=False)
         doc.orderLayouts()
         doc.saveLayoutsAsJson()
