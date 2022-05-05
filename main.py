@@ -39,7 +39,7 @@ def main():
 
         #   extract & save layout
         doc.docToImages()
-        doc.extractLayouts(visualize=True, segment_sections=False)
+        doc.extractLayouts(visualize=True, segment_sections=True)
         doc.orderLayouts()
         doc.saveLayoutsAsJson()
         doc.saveLayoutsAsHtml()
