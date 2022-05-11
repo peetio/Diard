@@ -80,3 +80,4 @@ Diard
 * [ ] add automatic rotation/ align
 * [ ] add support for page which are split in three (add "n split detection up to three")
 * [ ] filter out overlapping detections
+* [ ] add support for LayoutLMv3
