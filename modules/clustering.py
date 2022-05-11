@@ -194,9 +194,97 @@ def getPageColumns(layout):
                         return 3
     return cols
 
-        # if overlap
-        # huidige b zijn center x vergelijken met volgende b's center x indien een van de volgende zijn y coordinaten binnen de hoogte van huidige b zijn y hoogte valt
-        # als volgende cx overlaps en rechts ligt van huidige cx dan is cols 2
-        # indien dit het geval is moeten we checken of er nog andere kolommen rechts van de volgende cx te vinden zijn, indien dit het geval is zet je cols op 3 en break je de loop
+def prioritizeLabels(layouts, cn_labels, r_labels):
+    """Compares segmentation method outputs to get best of both worlds
 
-    return cols
+    Args:
+        layouts (list): list of Layout instances
+        cn_labels (list): chapter numbering section segmentation output labels
+        r_labels (list): natural breaks section segmentation output labels
+
+    Returns:
+        a list containing the combined labels
+    """
+
+    labels = []
+    title_id = 0
+
+    for layout in layouts:
+        for b in layout:
+            if b.type.lower() == "title":
+                #   prioritize numbered chapter headings
+                text = b.text.strip()
+                is_digit = False
+                if len(text) > 0:
+                    c = text[0]
+                    is_digit = c.isdigit()
+
+                isnt_empty = len(r_labels) > 0
+                is_heading = False
+                if isnt_empty:
+                    is_heading = r_labels[title_id] == "heading"
+
+                if cn_labels[title_id] == "heading":
+                    labels.append("heading")
+
+                elif not is_digit and isnt_empty and is_heading:
+                    labels.append("heading")
+                else:
+                    labels.append("sub")
+
+                title_id += 1
+
+    return labels
+
+def sectionByChapterNums(layouts):
+    """Finds sections based on the chapter numbering
+
+    Args:
+        layouts (list): list of Layout instances
+
+    Returns:
+        a label list where each item corresponds to a title object
+    """
+
+    curr_chapter = None
+    labels = []
+    for layout in layouts:
+        for b in layout:
+            if b.type.lower() == "title":
+                chapter = ""
+                text = b.text.strip()
+                for t in text:
+                    if t.isdigit():
+                        chapter += t
+                    else:
+                        break
+
+                #   compare first digit of title w/ previous
+                if len(chapter) > 0 and chapter != curr_chapter:
+
+                    curr_chapter = chapter
+                    labels.append("heading")
+                else:
+                    labels.append("sub")
+
+    return labels
+
+def getTitleRatios(layouts):
+    """Gets the ratio (bounding box surface / char count) for each title
+
+    Args:
+        layouts (list): list of Layout instances
+
+    Returns:
+        list containing ratio for each title
+    """
+
+    ratios = []
+    for layout in layouts:
+        for b in layout:
+            if b.type.lower() == "title":
+                t = b.text
+                ratio = getRatio(b.block.coordinates, t)
+                ratios.append(ratio)
+
+    return ratios

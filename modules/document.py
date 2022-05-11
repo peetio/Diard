@@ -19,11 +19,10 @@ from modules.exceptions import (
     PageNumberError,
     UnsetAttributeError,
 )
-from modules.layout import getRatio, sectionByRatio, getPageColumns
-from modules.visuals import getHtmlSpanByType
+from modules.clustering import (prioritizeLabels, sectionByChapterNums, getTitleRatios, sectionByRatio, getPageColumns)
+from modules.export import getLayoutHtml, getLayoutsHtml
 
 class Document:
-
     @classmethod
     def getLayoutJsonDims(cls, l, dims=0):
         """Recursive function to find number of dimensions (n of rows) in a list
@@ -341,72 +340,6 @@ class Document:
         with open(json_path, "w") as f:
             f.write(json.dumps(layouts_json))
 
-    def getLayoutHtml(self, page, section=None):
-        """Saves HTML representation of single document page layout
-
-        Args:
-            page (int): page number of document
-            section (int): section to start from if processing multiple pages
-
-        Returns:
-            HTML representation of a single document page layout
-        """
-
-        html = ""
-        if section is None:
-            single = True
-            section = 0
-        else:
-            single = False
-
-        for b in self.layouts[page]:
-            try:
-                new_section = not b.section == section
-                is_title = b.type == "title"
-                if new_section and is_title:
-                    section = b.section
-            except AttributeError:
-                #   no section segmentation used
-                pass
-
-            html_span = getHtmlSpanByType(b, section)
-            html += html_span
-
-        if single:
-            return html + "</body>"
-        else:
-            return (html, section)
-
-    def getLayoutsHtml(self):
-        """Gets HTML representation of a whole document layout
-
-        Returns:
-            HTML representation of whole document layout
-        """
-
-        html = (
-            '<link rel="stylesheet" href="../../../resources/stylesheet.css">'
-            + '<link rel="preconnect" href="https://fonts.googleapis.com">'
-            + '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-            + '<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed&display=swap" rel="stylesheet">'
-            + '<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">'
-            + '<script src="../../../resources/stylescript.js"></script>'
-            + '<div class="toc_container">'
-            + '<div class="toc">'
-            + '<h4>TABLE OF CONTENTS</h4>'
-            + '<div class="table"></div></div></div>'
-            + '<div id="layout">'
-            + '<body>'
-            )
-
-        section = 0
-        for page in range(len(self.layouts)):
-            html_span, section = self.getLayoutHtml(page, section)
-            html += html_span
-
-        html += "</div></body>"
-        return html
-
     def saveLayoutAsHtml(self, page):
         """Saves JSON representation of single document page layout
 
@@ -418,7 +351,7 @@ class Document:
         html_dir = self.output_path + "/htmls/"
         Path(html_dir).mkdir(parents=True, exist_ok=True)
         html_path = html_dir + str(page) + ".html"
-        layout_html = self.getLayoutHtml(page)
+        layout_html = getLayoutHtml(self.layouts[page])
 
         html_path = html_dir + str(page) + ".html"
         with open(html_path, "w") as f:
@@ -434,7 +367,7 @@ class Document:
             self.saveLayoutAsHtml(page)
 
         html_path = html_dir + self.name + ".html"
-        layouts_html = self.getLayoutsHtml()
+        layouts_html = getLayoutsHtml(self.layouts)
 
         with open(html_path, "w") as f:
             f.write(layouts_html)
@@ -483,94 +416,6 @@ class Document:
         else:
             raise InputJsonStructureError(filename)
 
-    def sectionByChapterNums(self):
-        """Finds sections based on the chapter numbering
-
-        Returns:
-            a label list where each item corresponds to a title object
-        """
-
-        curr_chapter = None
-        labels = []
-        for layout in self.layouts:
-            for b in layout:
-                if b.type.lower() == "title":
-                    chapter = ""
-                    text = b.text.strip()
-                    for t in text:
-                        if t.isdigit():
-                            chapter += t
-                        else:
-                            break
-
-                    #   compare first digit of title w/ previous
-                    if len(chapter) > 0 and chapter != curr_chapter:
-
-                        curr_chapter = chapter
-                        labels.append("heading")
-                    else:
-                        labels.append("sub")
-
-        return labels
-
-    def getTitleRatios(self):
-        """Gets the ratio (bounding box surface / char count) for each title
-
-        Returns:
-            list containing ratio for each title
-        """
-
-        ratios = []
-        for layout in self.layouts:
-            for b in layout:
-                if b.type.lower() == "title":
-                    t = b.text
-                    ratio = getRatio(b.block.coordinates, t)
-                    ratios.append(ratio)
-
-        return ratios
-
-    def prioritizeLabels(self, cn_labels, r_labels):
-        """Compares segmentation method outputs to get best of both worlds
-
-        Args:
-            cn_labels (list): chapter numbering section segmentation output labels
-            r_labels (list): natural breaks section segmentation output labels
-
-        Returns:
-            a list containing the combined labels
-        """
-
-        labels = []
-        title_id = 0
-
-        for layout in self.layouts:
-            for b in layout:
-                if b.type.lower() == "title":
-                    #   prioritize numbered chapter headings
-                    text = b.text.strip()
-                    is_digit = False
-                    if len(text) > 0:
-                        c = text[0]
-                        is_digit = c.isdigit()
-
-                    isnt_empty = len(r_labels) > 0
-                    is_heading = False
-                    if isnt_empty:
-                        is_heading = r_labels[title_id] == "heading"
-
-                    if cn_labels[title_id] == "heading":
-                        labels.append("heading")
-
-                    elif not is_digit and isnt_empty and is_heading:
-                        labels.append("heading")
-                    else:
-                        labels.append("sub")
-
-                    title_id += 1
-
-        return labels
-
     def setSections(self, labels):
         """Sets section to which each document object belongs
 
@@ -591,9 +436,9 @@ class Document:
 
     def segmentSections(self):
         """Segments sections based on numbering and natural breaks"""
-        cn_labels = self.sectionByChapterNums()
-        ratios = self.getTitleRatios()
+        cn_labels = sectionByChapterNums(self.layouts)
+        ratios = getTitleRatios(self.layouts)
         r_labels = sectionByRatio(ratios, self.name)
-        labels = self.prioritizeLabels(cn_labels, r_labels)
+        labels = prioritizeLabels(self.layouts, cn_labels, r_labels)
         self.setSections(labels)
 
