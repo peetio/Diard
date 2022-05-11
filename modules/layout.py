@@ -158,12 +158,11 @@ def sectionByRatio(ratios, filename):
 
     return mapped_labels
 
-def getPageColumns(layout, half):
+def getPageColumns(layout):
     """Gets the number of columns used in the layout
 
     Args:
         layout (layoutparser.Layout): document objects
-        half (int): the half of the width of the page
 
     Returns:
         the number of columns in given layout

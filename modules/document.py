@@ -190,27 +190,45 @@ class Document:
         """Orders each page's layout based object bounding boxes"""
 
         if not self.ordered:
-            half = self.images[0].shape[1] / 2
+            width = self.images[0].shape[1]
 
             for page, layout in enumerate(self.layouts):
-                #   non-Manhattan layout support
-                #   split layout into based on block center (x-axis)
-                #   TODO: split detection
-                cols = getPageColumns(layout, half)
-                cols = 2    #   testing
+                #   layout support up to 3 columns
+                #   split layout based on block center (x-axis)
+                cols = getPageColumns(layout)
+                blocks = layout._blocks
                 if cols in [1, 2]:
-                    left_layout = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) < half, layout))
-                    right_layout = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) >= half, layout))
+                    #   get blocks and filter per column
+                    left_blocks = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) < (width / 2), blocks))
+                    right_blocks = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) >= (width / 2), blocks))
 
                     #   filter on y-axis page location
-                    left_layout= sorted(left_layout, key=lambda b: b.block.y_1)
-                    right_layout = sorted(right_layout, key=lambda b: b.block.y_1)
+                    left_blocks= sorted(left_blocks, key=lambda b: b.block.y_1)
+                    right_blocks = sorted(right_blocks, key=lambda b: b.block.y_1)
 
                     #   recompose layout
-                    left_layout.extend(right_layout)
+                    left_blocks.extend(right_blocks)
 
+                elif cols == 3:
+                    cols = width / 3
+                    break1, break2 = cols, cols * 2
+
+                    #   get blocks and filter per column
+                    left_blocks = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) <= break1, blocks))
+                    center_blocks = list(filter(lambda b: break1 < b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) < break2, blocks))
+                    right_blocks = list(filter(lambda b: break2 <= b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2), blocks))
+
+                    #   filter on y-axis page location
+                    left_blocks = sorted(left_blocks, key=lambda b: b.block.y_1)
+                    center_blocks = sorted(center_blocks, key=lambda b: b.block.y_1)
+                    right_blocks = sorted(right_blocks, key=lambda b: b.block.y_1)
+
+                    #   recompose layout
+                    center_blocks.extend(right_blocks)
+                    left_blocks.extend(center_blocks)
+                
                 self.layouts[page] = lp.Layout(
-                    [b.set(id=idx) for idx, b in enumerate(left_layout)]
+                    blocks=[b.set(id=idx) for idx, b in enumerate(left_blocks)]
                 )
 
                 self.ordered = True
