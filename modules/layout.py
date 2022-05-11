@@ -1,4 +1,5 @@
 import jenkspy
+import logging
 import pandas as pd
 
 def getRatio(coords, text):
@@ -133,9 +134,13 @@ def mapJenksLabels(ratios, labels, label_map={0: "heading", 1: "sub", 2: "random
 
     return mapped_labels
 
-def sectionByRatio(ratios):
+def sectionByRatio(ratios, filename):
     """Finds sections based on ratio (bounding box surface / char count)
 
+    Args:
+        ratios (list): char count over surface ratio for each title
+        filename (string): document filename for error message
+        
     Returns:
         a label list where each item corresponds to a title object
     """
@@ -148,8 +153,51 @@ def sectionByRatio(ratios):
         mapped_labels = mapJenksLabels(ratios, labels)
     else:
         logging.warning(
-            f"Not enough titles detected in '{self.name}' to find natural breaks, using only chapter numbering. Minimum number of titles is {n_classes}"
+            f"Not enough titles detected in '{filename}' to find natural breaks, using only chapter numbering. Minimum number of titles is {n_classes}"
         )
 
     return mapped_labels
 
+def getPageColumns(layout, half):
+    """Gets the number of columns used in the layout
+
+    Args:
+        layout (layoutparser.Layout): document objects
+        half (int): the half of the width of the page
+
+    Returns:
+        the number of columns in given layout
+    """
+    
+    cols = 1
+    for i, b1 in enumerate(layout):
+        b1_x1, b1_y1, b1_x2, b1_y2 = b1.block.coordinates
+        #cx1 =  b1_x1 + ((b1_x2 - b1_x1) / 2)   #   TODO: remove this
+
+        l2 = layout.copy()
+        l2.pop(i)    #  exclude current block
+        for j, b2 in enumerate(l2):
+            b2_x1, b2_y1, b2_x2, b2_y2 = b2.block.coordinates
+            overlap = b1_y1 > b2_y2 or b2_y1 > b1_y2
+            neighbours = b1_x2 < b2_x1
+            if overlap and neighbours:
+                if cols < 2:
+                    cols = 2
+
+                l3 = l2.copy()
+                l3.pop(j)
+                for y, b3 in enumerate(l3):
+                    b3_x1, b3_y1, b3_x2, b3_y2 = b3.block.coordinates
+                    overlap = b2_y1 > b3_y2 or b3_y1 > b2_y2
+                    neighbours = b2_x2 < b3_x1
+                    if overlap and neighbours:
+                        #   max number of cols is 3
+                        return 3
+    return cols
+
+        # if overlap
+        # huidige b zijn center x vergelijken met volgende b's center x indien een van de volgende zijn y coordinaten binnen de hoogte van huidige b zijn y hoogte valt
+        # als volgende cx overlaps en rechts ligt van huidige cx dan is cols 2
+        # indien dit het geval is moeten we checken of er nog andere kolommen rechts van de volgende cx te vinden zijn, indien dit het geval is zet je cols op 3 en break je de loop
+
+    return cols

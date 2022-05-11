@@ -19,7 +19,7 @@ from modules.exceptions import (
     PageNumberError,
     UnsetAttributeError,
 )
-from modules.layout import getRatio, sectionByRatio
+from modules.layout import getRatio, sectionByRatio, getPageColumns
 from modules.visuals import getHtmlSpanByType
 
 class Document:
@@ -195,15 +195,20 @@ class Document:
             for page, layout in enumerate(self.layouts):
                 #   non-Manhattan layout support
                 #   split layout into based on block center (x-axis)
-                left_layout = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) < half, layout))
-                right_layout = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) >= half, layout))
+                #   TODO: split detection
+                cols = getPageColumns(layout, half)
+                cols = 2    #   testing
+                if cols in [1, 2]:
+                    left_layout = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) < half, layout))
+                    right_layout = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) >= half, layout))
 
-                #   filter on y-axis page location
-                left_layout= sorted(left_layout, key=lambda b: b.block.y_1)
-                right_layout = sorted(right_layout, key=lambda b: b.block.y_1)
+                    #   filter on y-axis page location
+                    left_layout= sorted(left_layout, key=lambda b: b.block.y_1)
+                    right_layout = sorted(right_layout, key=lambda b: b.block.y_1)
 
-                #   recompose layout
-                left_layout.extend(right_layout)
+                    #   recompose layout
+                    left_layout.extend(right_layout)
+
                 self.layouts[page] = lp.Layout(
                     [b.set(id=idx) for idx, b in enumerate(left_layout)]
                 )
@@ -570,7 +575,7 @@ class Document:
         """Segments sections based on numbering and natural breaks"""
         cn_labels = self.sectionByChapterNums()
         ratios = self.getTitleRatios()
-        r_labels = sectionByRatio(ratios)
+        r_labels = sectionByRatio(ratios, self.name)
         labels = self.prioritizeLabels(cn_labels, r_labels)
         self.setSections(labels)
 
