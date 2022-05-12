@@ -2,6 +2,8 @@
 import json
 import logging
 import os
+import langdetect
+import pycountry
 from pathlib import Path
 
 import cv2
@@ -46,6 +48,9 @@ class Document:
         output_path=None,
         predictor=None,
         metadata=None,
+        lang="eng",
+        lang_detect=False,
+        langs=None,
         label_map=["text", "title", "list", "table", "figure"],
     ):
         """Creates instance of Document object
@@ -55,7 +60,10 @@ class Document:
             output_path (str): path to output directory
             predictor (detectron2.engine.defaults.DefaultPredictor, optional): configured default predictor instance
             metadata (detectron2.data.Metadata, optional): dataset metadata
-            label_map (list): label map used by the model. Defaults to example label map
+            lang (string, optional): language used in the document. Defaults to "eng" or English (ISO 639-3 format)
+            lang_detect (bool, optional): if True language detection is used
+            langs (list, optional): languages used in documents (ISO 639-3 format)
+            label_map (list, optional): label map used by the model. Defaults to example label map
         """
 
         name = source_path.split("/")[-1]
@@ -80,6 +88,9 @@ class Document:
         Path(output_path).mkdir(parents=True, exist_ok=True)
         self.output_path = output_path
 
+        self.lang_detect = lang_detect
+        self.lang = lang
+        self.langs = langs
         self.metadata = metadata
         self.predictor = predictor
         self.layouts = []
@@ -92,7 +103,22 @@ class Document:
         pil_imgs = convert_from_path(self.source_path)
         self.images = [cv2.cvtColor(np.asarray(img), cv2.COLOR_BGR2RGB) for img in pil_imgs]
 
-    def setExtractedData(self, b_type, block, img, page, idx):
+    def getTextFromImage(self, block, img):
+        """Extracts text from image
+
+        Args:
+            block (layoutparser.elements.TextBlock): TextBlock obj containing document object data
+            img (numpy.ndarray): image of document page
+
+        Return:
+            the extracted text as a string
+        """
+        #   TODO: maybe you can add an option to clean the OCR
+        snippet = block.pad(left=5, right=5, top=5, bottom=5).crop_image(img)
+        text = image_to_string(snippet, lang=self.lang)
+        return text
+
+    def setExtractedData(self, block, img, page, idx):
         """Extracts and sets content of document object (block)
 
         Args:
@@ -105,11 +131,11 @@ class Document:
 
         figure_dir = self.output_path + "/figures/"
         Path(figure_dir).mkdir(parents=True, exist_ok=True)
+        b_type = block.type.lower()
 
         if b_type in ["text", "title", "list"]:
-            snippet = block.pad(left=5, right=5, top=5, bottom=5).crop_image(img)
-
-            text = image_to_string(snippet, lang="deu")
+            text = self.getTextFromImage(block, img)
+            
             block.set(text=text, inplace=True)
 
         elif b_type in ["table", "figure"]:
@@ -127,6 +153,26 @@ class Document:
             block.set(text=save_path, inplace=True)
         else:
             logging.warning(f"Block of type '{b_type}' not supported.")
+
+    def detectLanguage(self, block, img):
+        """Detects and sets language if detection is successful
+
+        Args:
+            block (layoutparser.elements.TextBlock): TextBlock obj containing document object data
+            img (numpy.ndarray): image of document page
+        """
+        text = self.getTextFromImage(block, img)
+        if len(text.split(" ")) > 5:
+            lang = langdetect.detect(text.strip())
+            lang = pycountry.languages.get(alpha_2=lang)
+            in_langs = self.langs and lang.alpha_3 in self.langs
+            if in_langs or not self.langs:
+                logging.info(f"Language detection successful! Language is now set to {lang.name} ({lang.alpha_3}).")
+                self.lang = lang.alpha_3
+            else:
+                logging.warning(f"Language detection might have failed. {lang.name} ({lang.alpha_3}) not in list of languages ({self.langs}).")
+
+            self.lang_detect = False
 
     def extractLayouts(self, segment_sections=False, visualize=False):
         """Extracts and sets layout from document images
@@ -168,10 +214,15 @@ class Document:
                 block = lp.TextBlock(
                     block=rects[j], type=self.label_map[classes[j]], score=scores[j]
                 )
-
-                b_type = block.type.lower()
-                self.setExtractedData(b_type, block, img, page, j)
                 blocks.append(block)
+
+                #   detect language used in document
+                is_text = block.type.lower() == "text"
+                if self.lang_detect and is_text:
+                    self.detectLanguage(block, img)
+                
+            for j, b in enumerate(blocks):
+                self.setExtractedData(b, img, page, j)
 
             self.layouts.append(lp.Layout(blocks=blocks))
 

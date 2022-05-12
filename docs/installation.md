@@ -44,6 +44,12 @@ A Tesseract OCR Python wrapper is used for text recognition. For more informatio
 pip install pip install pytesseract
 ```
 
+Next, you need to download additional language packs. You can download the language packs from either the [tessdata](https://github.com/tesseract-ocr/tessdata) or [tessdata_fast](https://github.com/tesseract-ocr/tessdata_fast) repository. Keep in mind that you have to make a speed/accuracy compromise when using the fast packs. You can either clone the whole repository or download a single pack. During development the (format=language:abbreviation:packname) English='eng'=eng.traineddata, French='fra'=fra.traineddata, and German='deu'=deu.traineddata lanaguage packs were used. Put the language packs in a directory called tessdata and set the TESSDATA_PREFIX environment variable like we do below.
+
+```bash
+export TESSDATA_PREFIX=/home/user/tessdata
+```
+
 ## STEP 6: Layout Parser
 
 For more information about this DIA toolkit you can refer to the [Layout Parser GitHub repository](https://github.com/Layout-Parser/layout-parser). The two install commands below should suffice if you just want to test the pipeline.

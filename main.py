@@ -34,8 +34,14 @@ def main():
     for filename in filenames:
         #   create Document instance
         doc_path = docs_dir + filename
-        print("document path:", doc_path)
-        doc = Document(doc_path, predictor=predictor, metadata=metadata)
+        lang = "deu"    #   language used in most documents
+        langs = ["eng", "fra", "deu"]   #   only if lang_detect=True
+        doc = Document(doc_path, 
+                predictor=predictor, 
+                metadata=metadata, 
+                lang=lang, 
+                lang_detect=True, 
+                langs=langs)
 
         #   extract & save layout
         doc.docToImages()
