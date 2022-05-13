@@ -21,7 +21,7 @@ def main():
     #   initialize model
     config_path = "./resources/model_configs/cascade/cascade_dit_large.yaml"
     weights_path = "./resources/weights/publaynet_dit-l_cascade.pth"
-    predictor, metadata = initializeModel(config_path, weights_path, threshold=0.65)
+    predictor, metadata = initializeModel(config_path, weights_path, threshold=0.60)
 
     docs_dir = "./resources/pdfs/"
 

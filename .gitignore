@@ -5,4 +5,5 @@ resources/weights/
 resources/pdfs/*
 modules/__pycache__/
 ditod/__pycache__/
+notes.md
 

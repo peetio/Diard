@@ -24,6 +24,49 @@ from modules.exceptions import (
 from modules.clustering import (prioritizeLabels, sectionByChapterNums, getTitleRatios, sectionByRatio, getPageColumns)
 from modules.export import getLayoutHtml, getLayoutsHtml
 
+
+
+def filterOverlaps(rects, scores, classes):
+    removal_idxs = []
+    for r1_id, r1 in enumerate(rects):
+        for r2_id, r2 in enumerate(rects):
+            #   either one on left side of the other
+            overlap = overlapCheck(r1, r2)
+            if overlap:
+                #   keep rectangle with biggest surface
+                r1_surface = (r1_x2 - r1_x1) * (r1_y2 - r1_y1)
+                r2_surface = (r2_x2 - r2_x1) * (r2_y2 - r2_y1)
+                if r1_surface > r2_surface:
+                    removal_idxs.append(r2_id)
+                else:
+                    removal_idxs.append(r1_id)
+
+    removal_idxs = np.unique(np.asarray(removal_idxs)).tolist()
+    filtered_rects = [r for ri, r in enumerate(rects) if ri not in removal_idxs]
+    filtered_scores = [s for si, s in enumerate(scores) if si not in removal_idxs]
+    filtered_classes =  [c for ci, c in enumerate(classes) if ci not in removal_idxs]
+
+    return filtered_rects, filtered_scores, filtered_classes
+
+def overlapCheck(r1, r2):
+    """Checks if two rectangles overlap
+
+    Args:
+        r1 (layoutparser.elements.Rectangle): rectangle with tl and br coordinates
+        r2 (layoutparser.elements.Rectangle): rectangle with tl and br coordinates
+
+    Returns:
+        True if given rectangles overlap, False otherwise
+    """
+    #   rectangles next to each other?
+    if r1.x_2 < r2.x_1 or r2.x_1 < r1.x_2:
+        return False
+    #   rectangles on top of each other?
+    elif r1.y_2 > r2.y_1 or r2.y_2 > r1.y_1:
+        return False
+    else:
+        return True
+
 class Document:
     @classmethod
     def getLayoutJsonDims(cls, l, dims=0):
@@ -209,10 +252,17 @@ class Document:
                 lp.Rectangle(int(b[0]), int(b[1]), int(b[2]), int(b[3]))
                 for b in np_boxes
             ]
+
+            #   TODO: check for overlap, move a function (
+            filtered_rects, filtered_scores, filtered_classes = filterOverlaps(rects=rects, 
+                                                                                scores=scores,
+                                                                                classes=classes)
             blocks = []
-            for j in range(len(rects)):
+            for j in range(len(filtered_rects)):
                 block = lp.TextBlock(
-                    block=rects[j], type=self.label_map[classes[j]], score=scores[j]
+                    block=filtered_rects[j], 
+                    type=self.label_map[filtered_classes[j]], 
+                    score=filtered_scores[j]
                 )
                 blocks.append(block)
 
@@ -247,7 +297,10 @@ class Document:
                 #   split layout based on block center (x-axis)
                 cols = getPageColumns(layout)
                 blocks = layout._blocks
-                if cols in [1, 2]:
+                print("Number of cols is:", cols)
+                if cols == 1:
+                    left_blocks= sorted(blocks, key=lambda b: b.block.y_1)
+                if cols == 2:
                     #   get blocks and filter per column
                     left_blocks = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) < (width / 2), blocks))
                     right_blocks = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) >= (width / 2), blocks))
