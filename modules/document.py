@@ -26,46 +26,62 @@ from modules.export import getLayoutHtml, getLayoutsHtml
 
 
 
-def filterOverlaps(rects, scores, classes):
-    removal_idxs = []
-    for r1_id, r1 in enumerate(rects):
-        for r2_id, r2 in enumerate(rects):
-            #   either one on left side of the other
-            overlap = overlapCheck(r1, r2)
-            if overlap:
-                #   keep rectangle with biggest surface
-                r1_surface = (r1_x2 - r1_x1) * (r1_y2 - r1_y1)
-                r2_surface = (r2_x2 - r2_x1) * (r2_y2 - r2_y1)
-                if r1_surface > r2_surface:
-                    removal_idxs.append(r2_id)
-                else:
-                    removal_idxs.append(r1_id)
-
-    removal_idxs = np.unique(np.asarray(removal_idxs)).tolist()
-    filtered_rects = [r for ri, r in enumerate(rects) if ri not in removal_idxs]
-    filtered_scores = [s for si, s in enumerate(scores) if si not in removal_idxs]
-    filtered_classes =  [c for ci, c in enumerate(classes) if ci not in removal_idxs]
-
-    return filtered_rects, filtered_scores, filtered_classes
-
-def overlapCheck(r1, r2):
-    """Checks if two rectangles overlap
+def isOverarching(r1, r2):
+    """Checks if rectangle r2 is in rectangle r1
 
     Args:
         r1 (layoutparser.elements.Rectangle): rectangle with tl and br coordinates
         r2 (layoutparser.elements.Rectangle): rectangle with tl and br coordinates
 
     Returns:
-        True if given rectangles overlap, False otherwise
+        True if r1 is overarching
     """
-    #   rectangles next to each other?
-    if r1.x_2 < r2.x_1 or r2.x_1 < r1.x_2:
-        return False
-    #   rectangles on top of each other?
-    elif r1.y_2 > r2.y_1 or r2.y_2 > r1.y_1:
-        return False
-    else:
-        return True
+    overarching = (
+                  r1.x_1 <= r2.x_1 and
+                  r1.y_1 <= r2.y_1 and
+                  r1.x_2 >= r2.x_2 and
+                  r1.y_2 >= r2.y_2
+                )
+    return overarching
+
+def filterMatroesjka(rects, scores, classes):
+    """Filters out rectangles within each other
+
+    Args:
+        rects (list): layout parser Rectangle instances
+        scores (list): prediction scores
+        classes (list): prediction classes
+
+    Returns:
+        the given lists (rects, scores, classes) but without Matroesjka's
+    """
+
+    removal_idxs = []
+    for r1_id, r1 in enumerate(rects):
+        #   don't check for overlap with current rect
+        rects2 = rects.copy()
+        rects2[r1_id] = Rectangle(0, 0, 0, 0) #   keep original length in list copy
+
+        for r2_id, r2 in enumerate(rects2):
+            overarching = False
+            r1_surface = (r1.x_2 - r1.x_1) * (r1.y_2 - r1.y_1)
+            r2_surface = (r2.x_2 - r2.x_1) * (r2.y_2 - r2.y_1)
+            if r1_surface > r2_surface:
+                overarching = isOverarching(r1, r2)
+                if overarching:
+                    removal_idxs.append(r2_id)
+            else:
+                overarching = isOverarching(r2, r1)
+                if overarching:
+                    removal_idxs.append(r1_id)
+
+    removal_idxs = np.unique(np.asarray(removal_idxs)).tolist()
+    print("Removal indexes:", removal_idxs) #   TODO: remove this
+    filtered_rects = [r for ri, r in enumerate(rects) if ri not in removal_idxs]
+    filtered_scores = [s for si, s in enumerate(scores) if si not in removal_idxs]
+    filtered_classes =  [c for ci, c in enumerate(classes) if ci not in removal_idxs]
+
+    return filtered_rects, filtered_scores, filtered_classes
 
 class Document:
     @classmethod
@@ -254,7 +270,7 @@ class Document:
             ]
 
             #   TODO: check for overlap, move a function (
-            filtered_rects, filtered_scores, filtered_classes = filterOverlaps(rects=rects, 
+            filtered_rects, filtered_scores, filtered_classes = filterMatroesjka(rects=rects, 
                                                                                 scores=scores,
                                                                                 classes=classes)
             blocks = []
