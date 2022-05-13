@@ -177,7 +177,7 @@ def getPageColumns(layout):
         l2.pop(i)    #  exclude current block
         for j, b2 in enumerate(l2):
             b2_x1, b2_y1, b2_x2, b2_y2 = b2.block.coordinates
-            overlap = b1_y1 > b2_y2 or b2_y1 > b1_y2
+            overlap = not (b2_y1 > b1_y2 or b1_y1 > b2_y2)
             neighbours = b1_x2 < b2_x1
             if overlap and neighbours:
                 if cols < 2:
