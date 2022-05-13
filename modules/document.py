@@ -24,28 +24,25 @@ from modules.exceptions import (
 from modules.clustering import (prioritizeLabels, sectionByChapterNums, getTitleRatios, sectionByRatio, getPageColumns)
 from modules.export import getLayoutHtml, getLayoutsHtml
 
-
-
-def isOverarching(r1, r2):
-    """Checks if rectangle r2 is in rectangle r1
-
+def overlapCheck(r1, r2):
+    """Checks if two rectangles overlap
     Args:
         r1 (layoutparser.elements.Rectangle): rectangle with tl and br coordinates
         r2 (layoutparser.elements.Rectangle): rectangle with tl and br coordinates
-
     Returns:
-        True if r1 is overarching
+        True if given rectangles overlap
     """
-    overarching = (
-                  r1.x_1 <= r2.x_1 and
-                  r1.y_1 <= r2.y_1 and
-                  r1.x_2 >= r2.x_2 and
-                  r1.y_2 >= r2.y_2
-                )
-    return overarching
+    #   rectangles next to each other?
+    if r1.x_2 < r2.x_1 or r2.x_2 < r1.x_1:
+        return False
+    #   rectangles on top of each other?
+    elif r1.y_1 > r2.y_2 or r2.y_1 > r1.y_2:
+        return False
+    else:
+        return True
 
-def filterMatroesjka(rects, scores, classes):
-    """Filters out rectangles within each other
+def filterOverlaps(rects, scores, classes):
+    """Filters out overlapping rectangles 
 
     Args:
         rects (list): layout parser Rectangle instances
@@ -53,7 +50,7 @@ def filterMatroesjka(rects, scores, classes):
         classes (list): prediction classes
 
     Returns:
-        the given lists (rects, scores, classes) but without Matroesjka's
+        the given lists (rects, scores, classes) but without "big" overlappings
     """
 
     removal_idxs = []
@@ -63,17 +60,23 @@ def filterMatroesjka(rects, scores, classes):
         rects2[r1_id] = Rectangle(0, 0, 0, 0) #   keep original length in list copy
 
         for r2_id, r2 in enumerate(rects2):
-            overarching = False
-            r1_surface = (r1.x_2 - r1.x_1) * (r1.y_2 - r1.y_1)
-            r2_surface = (r2.x_2 - r2.x_1) * (r2.y_2 - r2.y_1)
-            if r1_surface > r2_surface:
-                overarching = isOverarching(r1, r2)
-                if overarching:
-                    removal_idxs.append(r2_id)
-            else:
-                overarching = isOverarching(r2, r1)
-                if overarching:
-                    removal_idxs.append(r1_id)
+            overlap = overlapCheck(r1, r2)
+            if overlap:
+                r1_area = (r1.x_2 - r1.x_1) * (r1.y_2 - r1.y_1)
+                r2_area = (r2.x_2 - r2.x_1) * (r2.y_2 - r2.y_1)
+
+                #   calculate intersection area
+                width = abs(min(r1.x_2, r2.x_2) - max(r1.x_1, r2.x_1))
+                height = abs(max(r1.y_1, r2.y_1) - min(r1.y_2, r2.y_2))
+
+                overlap_ratio = ((width*height) / min(r1_area, r2_area)) * 100
+                print("Overlap ratio is:", overlap_ratio)
+                if overlap_ratio > 60:
+                    #   intersection covers more than 85% of smallest rect?
+                    if r1_area > r2_area:
+                        removal_idxs.append(r2_id)
+                    else:
+                        removal_idxs.append(r1_id)
 
     removal_idxs = np.unique(np.asarray(removal_idxs)).tolist()
     print("Removal indexes:", removal_idxs) #   TODO: remove this
@@ -129,7 +132,7 @@ class Document:
         file_format = name.split(".")[-1]
         if file_format not in [
             "pdf"
-        ]:  #   TODO: test if other variations of pdf and docx can be used with image conversion (add docx when support added)
+        ]:
             raise DocumentFileFormatError(name, file_format)
 
         self.name = ".".join(name.split(".")[:-1])
@@ -269,8 +272,7 @@ class Document:
                 for b in np_boxes
             ]
 
-            #   TODO: check for overlap, move a function (
-            filtered_rects, filtered_scores, filtered_classes = filterMatroesjka(rects=rects, 
+            filtered_rects, filtered_scores, filtered_classes = filterOverlaps(rects=rects, 
                                                                                 scores=scores,
                                                                                 classes=classes)
             blocks = []

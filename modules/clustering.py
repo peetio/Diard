@@ -187,7 +187,7 @@ def getPageColumns(layout):
                 l3.pop(j)
                 for y, b3 in enumerate(l3):
                     b3_x1, b3_y1, b3_x2, b3_y2 = b3.block.coordinates
-                    overlap = b2_y1 > b3_y2 or b3_y1 > b2_y2
+                    overlap = not (b3_y1 > b2_y2 or b2_y1 > b3_y2)
                     neighbours = b2_x2 < b3_x1
                     if overlap and neighbours:
                         #   max number of cols is 3
