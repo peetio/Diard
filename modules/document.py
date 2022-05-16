@@ -257,6 +257,7 @@ class Document:
         ):
 
             predicts = self.predictor(img)["instances"]
+            print("PREDICTS:", predicts)
             boxes = predicts.pred_boxes if predicts.has("pred_boxes") else None
             np_boxes = boxes.tensor.cpu().numpy()
             classes = (
