@@ -28,7 +28,8 @@ python main.py
 After runnnig the above command, you should see output similar to the one below in your terminal.
 
 ```bash
-Processing 'example':   0%|                                                                                                                                                  | 0/8 [00:00<?, ?it/s]2022-05-16 09:46:34,138 | INFO: Language detection successful! Language is now set to German (deu).
+Processing 'example':   0%|                                                                                                                                                  | 0/8 [00:00<?, ?it/s]
+2022-05-16 09:46:34,138 | INFO: Language detection successful! Language is now set to German (deu).
 Processing 'example':  12%|█████████████████▎                                                                                                                        | 1/8 [00:03<00:25,  3.61s/it]
 ```
 
