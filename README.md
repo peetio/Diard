@@ -77,8 +77,7 @@ Diard
 │   │   │   ...
 │   │
 │   +---weights                             # Storage for pre-trained model weights
-│       │   publaynet_dit-l_cascade.pth     # Weight used in initial release
-│       │   ...
+│       │   publaynet_dit-l_cascade.pth     # Weights used in initial release
 │
 +---output                                  # Default output dir (created by pipeline)
     │
