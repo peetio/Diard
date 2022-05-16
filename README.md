@@ -19,7 +19,7 @@ cd Diard
 ```
 
 ## Running Locally
-If you just want to tes the pipeline, go ahead and use the following command to run the example script.
+If you just want to test the pipeline, go ahead and use the following command to run the example script.
 
 ```bash
 python main.py
