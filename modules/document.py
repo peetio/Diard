@@ -250,14 +250,15 @@ class Document:
         if len(self.layouts) > 0:
             self.layouts = []
 
-        for page, img in tqdm(
-            enumerate(self.images),
-            desc=("Processing '" + self.name + "'"),
-            total=len(self.images),
+        logging.info("Processing '" + self.name + "', starting layout detection now.")
+        predictions = self.predictor(self.images)
+        logging.info("Extracting content of " + str(len(predictions)) + " document objects.")
+        for page, predicts in tqdm(
+            enumerate(predictions),
+            desc=(),
+            total=len(predictions)
         ):
 
-            predicts = self.predictor(img)["instances"]
-            print("PREDICTS:", predicts)
             boxes = predicts.pred_boxes if predicts.has("pred_boxes") else None
             np_boxes = boxes.tensor.cpu().numpy()
             classes = (
@@ -274,6 +275,7 @@ class Document:
             filtered_rects, filtered_scores, filtered_classes = filterOverlaps(rects=rects, 
                                                                                 scores=scores,
                                                                                 classes=classes)
+            img = self.images[page]
             blocks = []
             for j in range(len(filtered_rects)):
                 block = lp.TextBlock(
