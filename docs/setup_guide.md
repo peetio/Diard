@@ -1,4 +1,4 @@
-# Installation Guide
+# Setup Guide
 We recommend you to use a virtual environment for the installation. We used virtualenv with the following commands.
 
 ```bash
@@ -6,13 +6,15 @@ python -m virtualenv ditenv
 source ditenv/bin/activate
 ```
 
-## STEP 1: OpenCV
+## STEP 1 - OpenCV ([pip](https://pypi.org/project/opencv-python/))
 
 ```bash
 pip install opencv-contrib-python
+# or
+pip install opencv-python
 ```
 
-## STEP 2: PyTorch
+## STEP 2 - PyTorch
 
 We used PyTorch v1.10.2 and torchvision v0.11.3 to build the pipeline but PyTorch v1.9.0 and torchvision v0.10.0 were used in the unilm DiT repository by Microsoft. PyTorch versions higher than 1.9.0 should work.
 
@@ -28,7 +30,7 @@ Or if you don't have a CUDA enabled GPU you can install the "CPU version" with P
 pip3 install torch==1.11.0+cpu torchvision==0.12.0+cpu torchaudio==0.11.0+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
 ```
 
-## STEP 3: Detectron2 
+## STEP 3 - Detectron2 
 
 The install command below should work to install the Detectron AI toolkit by Facebook. If you experience any issues you can use the official [installation guide](https://detectron2.readthedocs.io/en/latest/tutorials/install.html). Note that the library is hard to install on a Windows machine. For that reason we strongly recommend using Linux or MacOS.
 
@@ -36,7 +38,7 @@ The install command below should work to install the Detectron AI toolkit by Fac
 pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@v0.5#egg=detectron2"
 ```
 
-## STEP 5: PyTesseract
+## STEP 4 - PyTesseract
 
 A Tesseract OCR Python wrapper is used for text recognition. For more information about the installation you can refer to the [pytesseract](https://github.com/madmaze/pytesseract) GitHub repo.
 
@@ -44,13 +46,17 @@ A Tesseract OCR Python wrapper is used for text recognition. For more informatio
 pip install pip install pytesseract
 ```
 
-Next, you need to download additional language packs. You can download the language packs from either the [tessdata](https://github.com/tesseract-ocr/tessdata) or [tessdata_fast](https://github.com/tesseract-ocr/tessdata_fast) repository. Keep in mind that you have to make a speed/accuracy compromise when using the fast packs. You can either clone the whole repository or download a single pack. During development the (format=language:abbreviation:packname) English='eng'=eng.traineddata, French='fra'=fra.traineddata, and German='deu'=deu.traineddata lanaguage packs were used. Put the language packs in a directory called tessdata and set the TESSDATA_PREFIX environment variable like we do below.
+Next, you need to download additional language packs. You can download the language packs from either the [tessdata](https://github.com/tesseract-ocr/tessdata) or [tessdata_fast](https://github.com/tesseract-ocr/tessdata_fast) repository. Keep in mind that you have to make a speed/accuracy compromise when using the fast packs. 
+
+You can either clone the whole repository or download a single pack. During development the (format=language:abbreviation:packname) English='eng'=eng.traineddata, French='fra'=fra.traineddata, and German='deu'=deu.traineddata lanaguage packs were used. 
+
+Put the language packs in a directory called tessdata and set the TESSDATA_PREFIX environment variable like we do below.
 
 ```bash
 export TESSDATA_PREFIX=/home/user/tessdata
 ```
 
-## STEP 6: Layout Parser
+## STEP 6 - Layout Parser
 
 For more information about this DIA toolkit you can refer to the [Layout Parser GitHub repository](https://github.com/Layout-Parser/layout-parser). The two install commands below should suffice if you just want to test the pipeline.
 
@@ -58,7 +64,7 @@ For more information about this DIA toolkit you can refer to the [Layout Parser 
 pip install layoutparser
 ```
 
-## STEP 7: Python Libraries
+## STEP 7 - Python Libraries
 
 Install the required Python libraries from the root of the repository. You can also manually install them by opening the [requirements.txt](../requirements.txt) file.
 
@@ -66,6 +72,5 @@ Install the required Python libraries from the root of the repository. You can a
 pip install -r requirements.txt
 ```
 
-## STEP 8: Downloading Models
+## STEP 8 - Downloading Models
 After your environment is set up, you should download the pre-trained model weights from [this link](https://layoutlm.blob.core.windows.net/dit/dit-fts/publaynet_dit-l_cascade.pth) (1.4GB) and place it in the './resources/weights/' directory.
-

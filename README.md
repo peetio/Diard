@@ -8,15 +8,31 @@
 - [Directory Structure](#directory-structure)
 
 ## Diard Introduction
-Diard is a document image analysis pipeline which extracts semi-structured Analysis Ready Data from your Document's Images. To achieve this, a state-of-the-art layout detection model is used ([DiT](https://github.com/microsoft/unilm/tree/master/dit)) to extract document objects (i.e., title, text, list, figure,...). These objects are then used to segment the sections (i.e., Table Of Contents, Introduction,...) and to find the information needed to obtain a semi-structured version of your document.
+Diard is a document image analysis pipeline to extract semi-structured Analysis Ready Data from your Document's Images. To achieve this, the state-of-the-art layout detection model is used ([DiT](https://github.com/microsoft/unilm/tree/master/dit)) to extract document objects (e.g., title, text, list, figure,...). These objects are then used to segment the sections (e.g., Table Of Contents, Introduction,...) and to find the information needed to obtain a semi-structured version of your document. The pipeline output can be exported as HTML for evaluation and as JSON for text analysis.
 
-## Environment Setup
-First, clone the repository and use the [installation.md](docs/installation.md) file as an installation guide.
+## Environment Setup (MacOS, Linux)
+First, clone the repository and use the setup guide(docs/setup_guide.md) to run things locally.
 
 ```bash
 git clone https://github.com/thibaultvt/Diard.git
 cd Diard
 ```
+
+## Running Locally
+If you just want to tes the pipeline, go ahead and use the following command to run the example script.
+
+```bash
+python main.py
+```
+
+After runnnig the above command, you should see output similar to the one below in your terminal.
+
+```bash
+Processing 'example':   0%|                                                                                                                                                  | 0/8 [00:00<?, ?it/s]2022-05-16 09:46:34,138 | INFO: Language detection successful! Language is now set to German (deu).
+Processing 'example':  12%|█████████████████▎                                                                                                                        | 1/8 [00:03<00:25,  3.61s/it]
+```
+
+For more detailed explanations on how the pipeline can be used, you can refer to the [examples](docs/examples.md). Please note that the main Python script should always be ran from the root of the repository.
 
 ## Directory Structure
 
@@ -34,10 +50,12 @@ Diard
 │   │   utils.py                            # Non-class specific functions
 │   │   document.py                         # Document class definition
 │   │   exceptions.py                       # Custom exceptions
+│   │   sections.py                         # Section segmentation related functions
+│   │   export.py                           # Export/ evaluation related methods (HTML, JSON) 
 │ 
 +---docs
 │   │
-│   │   installation.md                     # Environment setup guide
+│   │   setup_guide.md                      # Environment setup guide
 │ 
 +---resources
 │   │
@@ -68,16 +86,3 @@ Diard
 ```
 
 
-### TODO
-* [ ] add support for word documents
-* [ ] add script for multiple documents and test
-* [ ] use of absolute paths for dir structure independence
-* [ ] add jupyter notebook examples
-* [ ] add docs where you explain all the methods and functionality and how you can extend the project + how you can use it with section clustering pipeline when that is finished
-* [ ] add support for the English language
-* [ ] add support for the French language
-* [ ] add language detection
-* [ ] add automatic rotation/ align
-* [ ] add support for page which are split in three (add "n split detection up to three")
-* [ ] filter out overlapping detections
-* [ ] add support for LayoutLMv3

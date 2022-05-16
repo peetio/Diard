@@ -4,11 +4,11 @@ import logging
 import os
 import langdetect
 import pycountry
-from pathlib import Path
-
 import cv2
 import layoutparser as lp
 import numpy as np
+
+from pathlib import Path
 from detectron2.utils.visualizer import ColorMode, Visualizer
 from layoutparser.elements import Rectangle, TextBlock
 from pdf2image import convert_from_path
@@ -21,7 +21,7 @@ from modules.exceptions import (
     PageNumberError,
     UnsetAttributeError,
 )
-from modules.clustering import (prioritizeLabels, sectionByChapterNums, getTitleRatios, sectionByRatio, getPageColumns)
+from modules.sections import (prioritizeLabels, sectionByChapterNums, getTitleRatios, sectionByRatio, getPageColumns)
 from modules.export import getLayoutHtml, getLayoutsHtml
 
 def overlapCheck(r1, r2):
@@ -70,7 +70,6 @@ def filterOverlaps(rects, scores, classes):
                 height = abs(max(r1.y_1, r2.y_1) - min(r1.y_2, r2.y_2))
 
                 overlap_ratio = ((width*height) / min(r1_area, r2_area)) * 100
-                print("Overlap ratio is:", overlap_ratio)
                 if overlap_ratio > 60:
                     #   intersection covers more than 85% of smallest rect?
                     if r1_area > r2_area:
@@ -79,7 +78,6 @@ def filterOverlaps(rects, scores, classes):
                         removal_idxs.append(r1_id)
 
     removal_idxs = np.unique(np.asarray(removal_idxs)).tolist()
-    print("Removal indexes:", removal_idxs) #   TODO: remove this
     filtered_rects = [r for ri, r in enumerate(rects) if ri not in removal_idxs]
     filtered_scores = [s for si, s in enumerate(scores) if si not in removal_idxs]
     filtered_classes =  [c for ci, c in enumerate(classes) if ci not in removal_idxs]
