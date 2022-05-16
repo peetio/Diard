@@ -28,9 +28,9 @@ python main.py
 After runnnig the above command, you should see output similar to the one below in your terminal.
 
 ```bash
-Processing 'example':   0%|                                                                                                                                                  | 0/8 [00:00<?, ?it/s]
+Processing 'example':   0%|                              | 0/8 [00:00<?, ?it/s]
 2022-05-16 09:46:34,138 | INFO: Language detection successful! Language is now set to German (deu).
-Processing 'example':  12%|█████████████████▎                                                                                                                        | 1/8 [00:03<00:25,  3.61s/it]
+Processing 'example':  12%|█████████████████▎            | 1/8 [00:03<00:25,  3.61s/it]
 ```
 
 For more detailed explanations on how the pipeline can be used, you can refer to the [examples](docs/examples.md). Please note that the main Python script should always be ran from the root of the repository.
