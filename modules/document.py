@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+import time
 from pathlib import Path
 
 import cv2
@@ -15,20 +16,12 @@ from pdf2image import convert_from_path
 from pytesseract import image_to_string
 from tqdm import tqdm
 
-from modules.exceptions import (
-    DocumentFileFormatError,
-    InputJsonStructureError,
-    PageNumberError,
-    UnsetAttributeError,
-)
+from modules.exceptions import (DocumentFileFormatError,
+                                InputJsonStructureError, PageNumberError,
+                                UnsetAttributeError)
 from modules.export import getLayoutHtml, getLayoutsHtml
-from modules.sections import (
-    getPageColumns,
-    getTitleRatios,
-    prioritizeLabels,
-    sectionByChapterNums,
-    sectionByRatio,
-)
+from modules.sections import (getPageColumns, getTitleRatios, prioritizeLabels,
+                              sectionByChapterNums, sectionByRatio)
 
 
 def overlapCheck(r1, r2):
@@ -262,8 +255,11 @@ class Document:
         if len(self.layouts) > 0:
             self.layouts = []
 
-        logging.info("Processing '" + self.name + "', starting layout detection now.")
+        logging.info(f"Processing '{self.name}', starting layout detection now.")
+        st = time.time()
         predictions = self.predictor(self.images)
+        et = time.time() - st
+        logging.info(f"Layout detection took {et}s.")
         logging.info(
             "Extracting content of " + str(len(predictions)) + " document objects."
         )
