@@ -1,10 +1,9 @@
-import os
 import logging
+import os
 import warnings
 
 from modules.document import Document
-from modules.utils import initializeModel
-from modules.exceptions import DocumentFileFormatError
+from modules.layoutdetection import LayoutDetection
 
 
 def main():
@@ -12,36 +11,45 @@ def main():
         format="%(asctime)s | %(levelname)s: %(message)s", level=logging.NOTSET
     )
     logging.disable(logging.DEBUG)
-
     #   suppressing PyTorch & Detectron warnings
     warnings.filterwarnings(
         "ignore", category=UserWarning
     )  # NOTE: comment out for debugging
 
-    #   initialize model
     config_path = "./resources/model_configs/cascade/cascade_dit_large.yaml"
     weights_path = "./resources/weights/publaynet_dit-l_cascade.pth"
-    predictor, metadata = initializeModel(config_path, weights_path, threshold=0.40)
 
-    docs_dir = "./resources/pdfs/"
+    ld = LayoutDetection(
+        cfg_path=config_path,
+        weights_path=weights_path,
+        batch_size=1,
+        workers=1,
+        threshold=0.75,
+    )
+
+    predictor = ld.getPredictor()
+    metadata = ld.getMetadata()
+    source_dir = "./resources/pdfs/"
 
     #   process single pdf
-    #document_paths = docs_dir + "example.pdf"
-    
+    filenames = ["example.pdf"]
+
     #   process multiple pdfs
-    filenames = os.listdir(docs_dir)
+    # filenames = os.listdir(source_dir)
 
     for filename in filenames:
-        #   create Document instance
-        doc_path = docs_dir + filename
-        lang = "deu"    #   language used in most documents
-        langs = ["eng", "fra", "deu"]   #   only if lang_detect=True
-        doc = Document(doc_path, 
-                predictor=predictor, 
-                metadata=metadata, 
-                lang=lang, 
-                lang_detect=True, 
-                langs=langs)
+        doc_path = source_dir + filename
+        lang = "deu"  #   language used in most documents
+        langs = ["eng", "fra", "deu"]  #   only if lang_detect=True
+
+        doc = Document(
+            doc_path,
+            predictor=predictor,
+            metadata=metadata,
+            lang=lang,
+            lang_detect=True,
+            langs=langs,
+        )
 
         #   extract & save layout
         doc.docToImages()
@@ -49,6 +57,7 @@ def main():
         doc.orderLayouts()
         doc.saveLayoutsAsJson()
         doc.saveLayoutsAsHtml()
+
 
 if __name__ == "__main__":
     main()

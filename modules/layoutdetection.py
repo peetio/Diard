@@ -7,10 +7,10 @@ import detectron2.data.transforms as T
 import torch
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import CfgNode, get_cfg
-from detectron2.modeling import build_model
 from detectron2.data import MetadataCatalog
-from torch.utils.data import DataLoader, Dataset 
+from detectron2.modeling import build_model
 from torch import cuda
+from torch.utils.data import DataLoader, Dataset
 
 from ditod import add_vit_config
 
@@ -40,7 +40,7 @@ class BatchPredictor:
             workers (int): number of workers. Defaults to 1 #   TODO: 0 might be a better default if it's auto selection
         """
         self.cfg = cfg.clone()  #   cfg can be modified by model
-        self.label_map= label_map 
+        self.label_map = label_map
         self.batch_size = batch_size
         self.workers = workers
         self.model = build_model(self.cfg)
@@ -50,8 +50,7 @@ class BatchPredictor:
         checkpointer.load(cfg.MODEL.WEIGHTS)
 
         self.aug = T.ResizeShortestEdge(
-            [cfg.INPUT.MIN_SIZE_TEST, cfg.INPUT.MIN_SIZE_TEST],
-            cfg.INPUT.MAX_SIZE_TEST
+            [cfg.INPUT.MIN_SIZE_TEST, cfg.INPUT.MIN_SIZE_TEST], cfg.INPUT.MAX_SIZE_TEST
         )
 
         self.input_format = cfg.INPUT.FORMAT
@@ -98,27 +97,28 @@ class BatchPredictor:
             shuffle=False,
             num_workers=self.workers,
             collate_fn=self.__collate,
-            pin_memory=True
+            pin_memory=True,
         )
 
-        predictions= []
+        predictions = []
         with torch.no_grad():
             for batch in loader:
                 results = self.model(batch)
-                instances = [result['instances'] for result in results]
+                instances = [result["instances"] for result in results]
                 predictions.extend(instances)
         return predictions
 
+
 class LayoutDetection:
     def __init__(
-            self,
-            cfg_path, 
-            weights_path,
-            batch_size=1,
-            workers=1,  #   TODO: try to set 0 workers, does this auto configure the right amount of workers?
-            threshold=0.75,
-            label_map=["text", "title", "list", "table", "figure"]
-            ):
+        self,
+        cfg_path,
+        weights_path,
+        batch_size=1,
+        workers=1,  #   TODO: try to set 0 workers, does this auto configure the right amount of workers?
+        threshold=0.75,
+        label_map=["text", "title", "list", "table", "figure"],
+    ):
         """Creates instance of LayoutDetection object
 
         Args:
@@ -129,7 +129,6 @@ class LayoutDetection:
             threshold (float, optional): score threshold. Defaults to 0.75
             label_map (list, optional): label map used by the model. Defaults to example label map
         """
-
 
         opts = ["MODEL.WEIGHTS", weights_path]
         cfg = get_cfg()
@@ -152,10 +151,11 @@ class LayoutDetection:
             instance of BatchPredictor object
         """
         predictor = BatchPredictor(
-                cfg=self.cfg, 
-                label_map=self.label_map, 
-                batch_size=self.batch_size, 
-                workers=self.workers)
+            cfg=self.cfg,
+            label_map=self.label_map,
+            batch_size=self.batch_size,
+            workers=self.workers,
+        )
         return predictor
 
     def getMetadata(self):
@@ -167,4 +167,3 @@ class LayoutDetection:
         metadata = MetadataCatalog.get(self.cfg.DATASETS.TEST[0])
         metadata.set(thing_classes=self.label_map)
         return metadata
-
