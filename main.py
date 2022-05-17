@@ -58,6 +58,5 @@ def main():
         doc.saveLayoutsAsJson()
         doc.saveLayoutsAsHtml()
 
-
 if __name__ == "__main__":
     main()
