@@ -1,6 +1,8 @@
-import jenkspy
 import logging
+
+import jenkspy
 import pandas as pd
+
 
 def getRatio(coords, text):
     """Gets the surface over char count ratio
@@ -34,6 +36,7 @@ def getRatio(coords, text):
 
     return ratio
 
+
 def applyJenks(ratios, n_classes=3):
     """Applies Jenks Natural Breaks Optimization to find similar titles
 
@@ -61,6 +64,7 @@ def applyJenks(ratios, n_classes=3):
         reordered_labels[ratios_id[i][0]] = label
 
     return reordered_labels
+
 
 def mapJenksLabels(ratios, labels, label_map={0: "heading", 1: "sub", 2: "random"}):
     """Maps Jenks Algorithm label output to title categories
@@ -134,13 +138,14 @@ def mapJenksLabels(ratios, labels, label_map={0: "heading", 1: "sub", 2: "random
 
     return mapped_labels
 
+
 def sectionByRatio(ratios, filename):
     """Finds sections based on ratio (bounding box surface / char count)
 
     Args:
         ratios (list): char count over surface ratio for each title
         filename (string): document filename for error message
-        
+
     Returns:
         a label list where each item corresponds to a title object
     """
@@ -158,6 +163,7 @@ def sectionByRatio(ratios, filename):
 
     return mapped_labels
 
+
 def getPageColumns(layout):
     """Gets the number of columns used in the layout
 
@@ -167,14 +173,14 @@ def getPageColumns(layout):
     Returns:
         the number of columns in given layout
     """
-    
+
     cols = 1
     for i, b1 in enumerate(layout):
         b1_x1, b1_y1, b1_x2, b1_y2 = b1.block.coordinates
-        #cx1 =  b1_x1 + ((b1_x2 - b1_x1) / 2)   #   TODO: remove this
+        # cx1 =  b1_x1 + ((b1_x2 - b1_x1) / 2)   #   TODO: remove this
 
         l2 = layout.copy()
-        l2.pop(i)    #  exclude current block
+        l2.pop(i)  #  exclude current block
         for j, b2 in enumerate(l2):
             b2_x1, b2_y1, b2_x2, b2_y2 = b2.block.coordinates
             overlap = not (b2_y1 > b1_y2 or b1_y1 > b2_y2)
@@ -193,6 +199,7 @@ def getPageColumns(layout):
                         #   max number of cols is 3
                         return 3
     return cols
+
 
 def prioritizeLabels(layouts, cn_labels, r_labels):
     """Compares segmentation method outputs to get best of both worlds
@@ -236,6 +243,7 @@ def prioritizeLabels(layouts, cn_labels, r_labels):
 
     return labels
 
+
 def sectionByChapterNums(layouts):
     """Finds sections based on the chapter numbering
 
@@ -268,6 +276,7 @@ def sectionByChapterNums(layouts):
                     labels.append("sub")
 
     return labels
+
 
 def getTitleRatios(layouts):
     """Gets the ratio (bounding box surface / char count) for each title

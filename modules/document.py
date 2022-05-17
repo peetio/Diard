@@ -2,27 +2,27 @@
 import json
 import logging
 import os
-import langdetect
-import pycountry
+import time
+from pathlib import Path
+
 import cv2
+import langdetect
 import layoutparser as lp
 import numpy as np
-
-from pathlib import Path
+import pycountry
 from detectron2.utils.visualizer import ColorMode, Visualizer
 from layoutparser.elements import Rectangle, TextBlock
 from pdf2image import convert_from_path
 from pytesseract import image_to_string
 from tqdm import tqdm
 
-from modules.exceptions import (
-    DocumentFileFormatError,
-    InputJsonStructureError,
-    PageNumberError,
-    UnsetAttributeError,
-)
-from modules.sections import (prioritizeLabels, sectionByChapterNums, getTitleRatios, sectionByRatio, getPageColumns)
+from modules.exceptions import (DocumentFileFormatError,
+                                InputJsonStructureError, PageNumberError,
+                                UnsetAttributeError)
 from modules.export import getLayoutHtml, getLayoutsHtml
+from modules.sections import (getPageColumns, getTitleRatios, prioritizeLabels,
+                              sectionByChapterNums, sectionByRatio)
+
 
 def overlapCheck(r1, r2):
     """Checks if two rectangles overlap
@@ -41,8 +41,9 @@ def overlapCheck(r1, r2):
     else:
         return True
 
+
 def filterOverlaps(rects, scores, classes):
-    """Filters out overlapping rectangles 
+    """Filters out overlapping rectangles
 
     Args:
         rects (list): layout parser Rectangle instances
@@ -57,7 +58,7 @@ def filterOverlaps(rects, scores, classes):
     for r1_id, r1 in enumerate(rects):
         #   don't check for overlap with current rect
         rects2 = rects.copy()
-        rects2[r1_id] = Rectangle(0, 0, 0, 0) #   keep original length in list copy
+        rects2[r1_id] = Rectangle(0, 0, 0, 0)  #   keep original length in list copy
 
         for r2_id, r2 in enumerate(rects2):
             overlap = overlapCheck(r1, r2)
@@ -69,7 +70,7 @@ def filterOverlaps(rects, scores, classes):
                 width = abs(min(r1.x_2, r2.x_2) - max(r1.x_1, r2.x_1))
                 height = abs(max(r1.y_1, r2.y_1) - min(r1.y_2, r2.y_2))
 
-                overlap_ratio = ((width*height) / min(r1_area, r2_area)) * 100
+                overlap_ratio = ((width * height) / min(r1_area, r2_area)) * 100
                 if overlap_ratio > 60:
                     #   intersection covers more than 85% of smallest rect?
                     if r1_area > r2_area:
@@ -80,9 +81,10 @@ def filterOverlaps(rects, scores, classes):
     removal_idxs = np.unique(np.asarray(removal_idxs)).tolist()
     filtered_rects = [r for ri, r in enumerate(rects) if ri not in removal_idxs]
     filtered_scores = [s for si, s in enumerate(scores) if si not in removal_idxs]
-    filtered_classes =  [c for ci, c in enumerate(classes) if ci not in removal_idxs]
+    filtered_classes = [c for ci, c in enumerate(classes) if ci not in removal_idxs]
 
     return filtered_rects, filtered_scores, filtered_classes
+
 
 class Document:
     @classmethod
@@ -101,7 +103,7 @@ class Document:
             return dims
 
         return cls.getLayoutJsonDims(l[0], (dims + 1))
-    
+
     def __init__(
         self,
         source_path,
@@ -118,19 +120,16 @@ class Document:
         Args:
             source_path (str): path to document
             output_path (str): path to output directory
-            predictor (detectron2.engine.defaults.DefaultPredictor, optional): configured default predictor instance
+            predictor (BatchPredictor, optional): configured predictor instance (see layoutdetection module)
             metadata (detectron2.data.Metadata, optional): dataset metadata
             lang (string, optional): language used in the document. Defaults to "eng" or English (ISO 639-3 format)
             lang_detect (bool, optional): if True language detection is used
             langs (list, optional): languages used in documents (ISO 639-3 format)
             label_map (list, optional): label map used by the model. Defaults to example label map
         """
-
         name = source_path.split("/")[-1]
         file_format = name.split(".")[-1]
-        if file_format not in [
-            "pdf"
-        ]:
+        if file_format not in ["pdf"]:
             raise DocumentFileFormatError(name, file_format)
 
         self.name = ".".join(name.split(".")[:-1])
@@ -161,7 +160,9 @@ class Document:
         """Converts each page of a document to images"""
         #   TODO: add .docx document support
         pil_imgs = convert_from_path(self.source_path)
-        self.images = [cv2.cvtColor(np.asarray(img), cv2.COLOR_BGR2RGB) for img in pil_imgs]
+        self.images = [
+            cv2.cvtColor(np.asarray(img), cv2.COLOR_BGR2RGB) for img in pil_imgs
+        ]
 
     def getTextFromImage(self, block, img):
         """Extracts text from image
@@ -195,7 +196,7 @@ class Document:
 
         if b_type in ["text", "title", "list"]:
             text = self.getTextFromImage(block, img)
-            
+
             block.set(text=text, inplace=True)
 
         elif b_type in ["table", "figure"]:
@@ -205,7 +206,7 @@ class Document:
                     "Tables are currently not supported and are therefore processed like figures."
                 )
             snippet = block.crop_image(img)
-            img_name = str(page) + '-' + str(idx) + ".jpg"
+            img_name = str(page) + "-" + str(idx) + ".jpg"
             figure_path = figure_dir + img_name
             save_path = "../figures/" + img_name
 
@@ -227,10 +228,14 @@ class Document:
             lang = pycountry.languages.get(alpha_2=lang)
             in_langs = self.langs and lang.alpha_3 in self.langs
             if in_langs or not self.langs:
-                logging.info(f"Language detection successful! Language is now set to {lang.name} ({lang.alpha_3}).")
+                logging.info(
+                    f"Language detection successful! Language is now set to {lang.name} ({lang.alpha_3})."
+                )
                 self.lang = lang.alpha_3
             else:
-                logging.warning(f"Language detection might have failed. {lang.name} ({lang.alpha_3}) not in list of languages ({self.langs}).")
+                logging.warning(
+                    f"Language detection might have failed. {lang.name} ({lang.alpha_3}) not in list of languages ({self.langs})."
+                )
 
             self.lang_detect = False
 
@@ -250,13 +255,18 @@ class Document:
         if len(self.layouts) > 0:
             self.layouts = []
 
-        for page, img in tqdm(
-            enumerate(self.images),
-            desc=("Processing '" + self.name + "'"),
-            total=len(self.images),
+        logging.info(f"Processing '{self.name}', starting layout detection now.")
+        st = time.time()
+        predictions = self.predictor(self.images)
+        et = time.time() - st
+        logging.info(f"Layout detection took {et}s.")
+        logging.info(
+            "Extracting content of " + str(len(predictions)) + " document objects."
+        )
+        for page, predicts in tqdm(
+            enumerate(predictions), desc=(), total=len(predictions)
         ):
 
-            predicts = self.predictor(img)["instances"]
             boxes = predicts.pred_boxes if predicts.has("pred_boxes") else None
             np_boxes = boxes.tensor.cpu().numpy()
             classes = (
@@ -270,15 +280,16 @@ class Document:
                 for b in np_boxes
             ]
 
-            filtered_rects, filtered_scores, filtered_classes = filterOverlaps(rects=rects, 
-                                                                                scores=scores,
-                                                                                classes=classes)
+            filtered_rects, filtered_scores, filtered_classes = filterOverlaps(
+                rects=rects, scores=scores, classes=classes
+            )
+            img = self.images[page]
             blocks = []
             for j in range(len(filtered_rects)):
                 block = lp.TextBlock(
-                    block=filtered_rects[j], 
-                    type=self.label_map[filtered_classes[j]], 
-                    score=filtered_scores[j]
+                    block=filtered_rects[j],
+                    type=self.label_map[filtered_classes[j]],
+                    score=filtered_scores[j],
                 )
                 blocks.append(block)
 
@@ -286,7 +297,7 @@ class Document:
                 is_text = block.type.lower() == "text"
                 if self.lang_detect and is_text:
                     self.detectLanguage(block, img)
-                
+
             for j, b in enumerate(blocks):
                 self.setExtractedData(b, img, page, j)
 
@@ -313,16 +324,27 @@ class Document:
                 #   split layout based on block center (x-axis)
                 cols = getPageColumns(layout)
                 blocks = layout._blocks
-                print("Number of cols is:", cols)
                 if cols == 1:
-                    left_blocks= sorted(blocks, key=lambda b: b.block.y_1)
+                    left_blocks = sorted(blocks, key=lambda b: b.block.y_1)
                 if cols == 2:
                     #   get blocks and filter per column
-                    left_blocks = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) < (width / 2), blocks))
-                    right_blocks = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) >= (width / 2), blocks))
+                    left_blocks = list(
+                        filter(
+                            lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2)
+                            < (width / 2),
+                            blocks,
+                        )
+                    )
+                    right_blocks = list(
+                        filter(
+                            lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2)
+                            >= (width / 2),
+                            blocks,
+                        )
+                    )
 
                     #   filter on y-axis page location
-                    left_blocks= sorted(left_blocks, key=lambda b: b.block.y_1)
+                    left_blocks = sorted(left_blocks, key=lambda b: b.block.y_1)
                     right_blocks = sorted(right_blocks, key=lambda b: b.block.y_1)
 
                     #   recompose layout
@@ -333,9 +355,28 @@ class Document:
                     break1, break2 = cols, cols * 2
 
                     #   get blocks and filter per column
-                    left_blocks = list(filter(lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) <= break1, blocks))
-                    center_blocks = list(filter(lambda b: break1 < b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2) < break2, blocks))
-                    right_blocks = list(filter(lambda b: break2 <= b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2), blocks))
+                    left_blocks = list(
+                        filter(
+                            lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2)
+                            <= break1,
+                            blocks,
+                        )
+                    )
+                    center_blocks = list(
+                        filter(
+                            lambda b: break1
+                            < b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2)
+                            < break2,
+                            blocks,
+                        )
+                    )
+                    right_blocks = list(
+                        filter(
+                            lambda b: break2
+                            <= b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2),
+                            blocks,
+                        )
+                    )
 
                     #   filter on y-axis page location
                     left_blocks = sorted(left_blocks, key=lambda b: b.block.y_1)
@@ -345,7 +386,7 @@ class Document:
                     #   recompose layout
                     center_blocks.extend(right_blocks)
                     left_blocks.extend(center_blocks)
-                
+
                 self.layouts[page] = lp.Layout(
                     blocks=[b.set(id=idx) for idx, b in enumerate(left_blocks)]
                 )
@@ -402,16 +443,17 @@ class Document:
         layout_json = []
         for block in self.layouts[page]:
             el = {
-                    "id": block.id,
-                    "type": block.type,
-                    "content": block.text,
-                    "box": block.coordinates,
-                    "page": page,
-                }
+                "id": block.id,
+                "type": block.type,
+                "content": block.text,
+                "box": block.coordinates,
+                "page": page,
+            }
             try:
                 if block.section:
-                    el['section'] = block.section
-            except AttributeError: pass
+                    el["section"] = block.section
+            except AttributeError:
+                pass
             layout_json.append(el)
 
         return layout_json
@@ -561,4 +603,3 @@ class Document:
         r_labels = sectionByRatio(ratios, self.name)
         labels = prioritizeLabels(self.layouts, cn_labels, r_labels)
         self.setSections(labels)
-
