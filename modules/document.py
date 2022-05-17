@@ -118,7 +118,7 @@ class Document:
         Args:
             source_path (str): path to document
             output_path (str): path to output directory
-            predictor (detectron2.engine.defaults.DefaultPredictor, optional): configured default predictor instance
+            predictor (BatchPredictor, optional): configured predictor instance (see layoutdetection module)
             metadata (detectron2.data.Metadata, optional): dataset metadata
             lang (string, optional): language used in the document. Defaults to "eng" or English (ISO 639-3 format)
             lang_detect (bool, optional): if True language detection is used
@@ -126,6 +126,7 @@ class Document:
             label_map (list, optional): label map used by the model. Defaults to example label map
         """
 
+        print("Predictor is of type:", type(predictor))
         name = source_path.split("/")[-1]
         file_format = name.split(".")[-1]
         if file_format not in [
@@ -316,7 +317,6 @@ class Document:
                 #   split layout based on block center (x-axis)
                 cols = getPageColumns(layout)
                 blocks = layout._blocks
-                print("Number of cols is:", cols)
                 if cols == 1:
                     left_blocks= sorted(blocks, key=lambda b: b.block.y_1)
                 if cols == 2:

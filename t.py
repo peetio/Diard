@@ -3,10 +3,7 @@ import logging
 import warnings
 
 from modules.document import Document
-from modules.exceptions import DocumentFileFormatError
 from modules.layoutdetection import LayoutDetection
-
-from pdf2image import convert_from_path
 
 def main():
     logging.basicConfig(
