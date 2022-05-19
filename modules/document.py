@@ -4,6 +4,7 @@ import logging
 import os
 import time
 from pathlib import Path
+from PIL import Image
 
 import cv2
 import langdetect
@@ -88,7 +89,7 @@ def filterOverlaps(rects, scores, classes):
 
 class Document:
     @classmethod
-    def getLayoutJsonDims(cls, l, dims=0):
+    def __getLayoutJsonDims(cls, l, dims=0):
         """Recursive function to find number of dimensions (n of rows) in a list
 
         Args:
@@ -102,7 +103,7 @@ class Document:
         if not type(l) == list:
             return dims
 
-        return cls.getLayoutJsonDims(l[0], (dims + 1))
+        return cls.__getLayoutJsonDims(l[0], (dims + 1))
 
     def __init__(
         self,
@@ -110,6 +111,7 @@ class Document:
         output_path=None,
         predictor=None,
         metadata=None,
+        table_predictor=None,
         lang="eng",
         lang_detect=False,
         langs=None,
@@ -152,19 +154,19 @@ class Document:
         self.langs = langs
         self.metadata = metadata
         self.predictor = predictor
+        self.table_predictor = table_predictor
         self.layouts = []
         self.label_map = label_map
         self.ordered = False
 
     def docToImages(self):
         """Converts each page of a document to images"""
-        #   TODO: add .docx document support
         pil_imgs = convert_from_path(self.source_path)
         self.images = [
             cv2.cvtColor(np.asarray(img), cv2.COLOR_BGR2RGB) for img in pil_imgs
         ]
 
-    def getTextFromImage(self, block, img):
+    def __getTextFromImage(self, block, img):
         """Extracts text from image
 
         Args:
@@ -179,7 +181,7 @@ class Document:
         text = image_to_string(snippet, lang=self.lang)
         return text
 
-    def setExtractedData(self, block, img, page, idx):
+    def __setExtractedData(self, block, img, page, idx):
         """Extracts and sets content of document object (block)
 
         Args:
@@ -195,34 +197,47 @@ class Document:
         b_type = block.type.lower()
 
         if b_type in ["text", "title", "list"]:
-            text = self.getTextFromImage(block, img)
+            text = self.__getTextFromImage(block, img)
 
             block.set(text=text, inplace=True)
 
-        elif b_type in ["table", "figure"]:
-            #   TODO: add table support
-            if b_type == "table":
-                logging.warning(
-                    "Tables are currently not supported and are therefore processed like figures."
-                )
+        elif b_type in ["figure", "table"]:
             snippet = block.crop_image(img)
-            img_name = str(page) + "-" + str(idx) + ".jpg"
+            img_name = str(page) + "-" + str(idx) + '_' + b_type + ".jpg"
             figure_path = figure_dir + img_name
             save_path = "../figures/" + img_name
 
             cv2.imwrite(figure_path, snippet)
             block.set(text=save_path, inplace=True)
+
+            if b_type == "table" and self.table_predictor:
+                snippet = cv2.cvtColor(snippet, cv2.COLOR_BGR2RGB)                
+                snippet = Image.fromarray(snippet)
+                df = self.table_predictor.get_table_data(
+                    snippet, 
+                    lang=self.lang, 
+                    debug=False, 
+                    threshold=0.7
+                    )
+                #   NOTE: when processing tables in the HTML you have to check whether you are 
+                        #   working with the image path or with DataFrame
+                #   NOTE: the DataFrame can be converted back from the string to a DF
+                #   use: https://stackoverflow.com/questions/22604564/create-pandas-dataframe-from-a-string
+                
+                df_csv = df.to_csv(index=False)
+                block.set(text=df_csv, inplace=True)
+
         else:
             logging.warning(f"Block of type '{b_type}' not supported.")
 
-    def detectLanguage(self, block, img):
+    def __detectLanguage(self, block, img):
         """Detects and sets language if detection is successful
 
         Args:
             block (layoutparser.elements.TextBlock): TextBlock obj containing document object data
             img (numpy.ndarray): image of document page
         """
-        text = self.getTextFromImage(block, img)
+        text = self.__getTextFromImage(block, img)
         if len(text.split(" ")) > 5:
             lang = langdetect.detect(text.strip())
             lang = pycountry.languages.get(alpha_2=lang)
@@ -258,7 +273,7 @@ class Document:
         logging.info(f"Processing '{self.name}', starting layout detection now.")
         st = time.time()
         predictions = self.predictor(self.images)
-        et = time.time() - st
+        et = round((time.time() - st), 3)
         logging.info(f"Layout detection took {et}s.")
         logging.info(
             "Extracting content of " + str(len(predictions)) + " document objects."
@@ -296,22 +311,22 @@ class Document:
                 #   detect language used in document
                 is_text = block.type.lower() == "text"
                 if self.lang_detect and is_text:
-                    self.detectLanguage(block, img)
+                    self.__detectLanguage(block, img)
 
             for j, b in enumerate(blocks):
-                self.setExtractedData(b, img, page, j)
+                self.__setExtractedData(b, img, page, j)
 
             self.layouts.append(lp.Layout(blocks=blocks))
 
             if visualize:
-                self.visualizePredictions(predicts, img, page)
+                self.__visualizePredictions(predicts, img, page)
 
         if segment_sections:
             if not self.ordered:
                 logging.info("Ordering layout for section segmentation.")
                 self.orderLayouts()
 
-            self.segmentSections()
+            self.__segmentSections()
 
     def orderLayouts(self):
         """Orders each page's layout based object bounding boxes"""
@@ -396,7 +411,7 @@ class Document:
         else:
             logging.info("Not re-ordering layout.")
 
-    def visualizePredictions(self, predicts, img, index):
+    def __visualizePredictions(self, predicts, img, index):
         """Saves prediction visualizations
 
         Args:
@@ -427,10 +442,10 @@ class Document:
         """
 
         pages = len(self.layouts)
-        if not 0 <= page <= pages - 1:
+        if not 0 <= page < pages:
             raise PageNumberError(page, pages)
 
-    def getLayoutJson(self, page):
+    def __getLayoutJson(self, page):
         """Gets JSON object representing a single document page layout
 
         Args:
@@ -458,7 +473,7 @@ class Document:
 
         return layout_json
 
-    def getLayoutsJson(self):
+    def __getLayoutsJson(self):
         """Gets JSON object representing the whole document layout
 
         Returns:
@@ -467,7 +482,7 @@ class Document:
 
         layouts_json = []
         for page in range(len(self.layouts)):
-            layouts_json.append(self.getLayoutJson(page))
+            layouts_json.append(self.__getLayoutJson(page))
 
         return layouts_json
 
@@ -484,21 +499,24 @@ class Document:
         Path(json_dir).mkdir(parents=True, exist_ok=True)
         json_path = json_dir + str(page) + ".json"
 
-        layout_json = self.getLayoutJson(page)
+        layout_json = self.__getLayoutJson(page)
         with open(json_path, "w") as f:
             f.write(json.dumps(layout_json))
 
     def saveLayoutsAsJson(self):
         """Saves JSON representation of whole document layout"""
 
+        pages = len(self.layouts)
+        if pages < 1:
+            logging.warning("You have no document layouts to export. Output directory is created regardless.")
         json_dir = self.output_path + "/jsons/"
         Path(json_dir).mkdir(parents=True, exist_ok=True)
 
-        for page in range(len(self.layouts)):
+        for page in range(pages):
             self.saveLayoutAsJson(page)
 
         json_path = json_dir + self.name + ".json"
-        layouts_json = self.getLayoutsJson()
+        layouts_json = self.__getLayoutsJson()
         with open(json_path, "w") as f:
             f.write(json.dumps(layouts_json))
 
@@ -534,7 +552,7 @@ class Document:
         with open(html_path, "w") as f:
             f.write(layouts_html)
 
-    def jsonToLayout(self, layout_json):
+    def __jsonToLayout(self, layout_json):
         """Gets a Layout object from a JSON layout representation of a single page
 
         Args:
@@ -569,16 +587,16 @@ class Document:
             layout_json = json.load(f)
 
         #   single or joined layouts file check based on list dimensionality
-        dims = self.getLayoutJsonDims(l=layout_json)
+        dims = self.__getLayoutJsonDims(l=layout_json)
         if dims == 1:
-            self.jsonToLayout(layout_json)
+            self.__jsonToLayout(layout_json)
         elif dims == 2:
             for layout in layout_json:
-                self.jsonToLayout(layout)
+                self.__jsonToLayout(layout)
         else:
             raise InputJsonStructureError(filename)
 
-    def setSections(self, labels):
+    def __setSections(self, labels):
         """Sets section to which each document object belongs
 
         Args:
@@ -596,10 +614,10 @@ class Document:
                     title_id += 1
                 b.section = section
 
-    def segmentSections(self):
+    def __segmentSections(self):
         """Segments sections based on numbering and natural breaks"""
         cn_labels = sectionByChapterNums(self.layouts)
         ratios = getTitleRatios(self.layouts)
         r_labels = sectionByRatio(ratios, self.name)
         labels = prioritizeLabels(self.layouts, cn_labels, r_labels)
-        self.setSections(labels)
+        self.__setSections(labels)

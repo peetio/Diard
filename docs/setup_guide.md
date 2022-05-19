@@ -73,4 +73,13 @@ pip install -r requirements.txt
 ```
 
 ## STEP 8 - Downloading Models
+
 After your environment is set up, you should download the pre-trained model weights from [this link](https://layoutlm.blob.core.windows.net/dit/dit-fts/publaynet_dit-l_cascade.pth) (1.4GB) and place it in the './resources/weights/' directory.
+
+### STEP 8.1 - (optional) Table Extraction
+
+A different model is used for table structure recognition. If you want table extraction you have to download the pre-trained model weights from [here](https://pubtables1m.blob.core.windows.net/model/pubtables1m_detection_detr_r18.pth), and put the file in the './resources/weights' directory.
+
+Check out the [examples](./examples.md) for a guide on how to enable table extraction in the pipeline.
+
+@Developers -> looking to add table extraction to your own document image analysis pipeline? You can find the original repository [right here](https://github.com/microsoft/table-transformer).
