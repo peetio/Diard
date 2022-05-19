@@ -33,7 +33,9 @@ class PageNumberError(Exception):
     """Raised when user tries to access non-existing document pages"""
 
     def __init__(self, page, pages):
-        self.message = "Cannot access layout at index {}, document layouts consists of {} pages. Please make sure to use zero-based numbering and that you should first use the extractLayouts() method.".format(page, pages)
+        self.message = "Cannot access layout at index {}, document layouts consists of {} pages. Please make sure to use zero-based numbering and that you should first use the extractLayouts() method.".format(
+            page, pages
+        )
 
     def __str__(self):
         return self.message

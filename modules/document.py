@@ -4,7 +4,6 @@ import logging
 import os
 import time
 from pathlib import Path
-from PIL import Image
 
 import cv2
 import langdetect
@@ -14,15 +13,24 @@ import pycountry
 from detectron2.utils.visualizer import ColorMode, Visualizer
 from layoutparser.elements import Rectangle, TextBlock
 from pdf2image import convert_from_path
+from PIL import Image
 from pytesseract import image_to_string
 from tqdm import tqdm
 
-from modules.exceptions import (DocumentFileFormatError,
-                                InputJsonStructureError, PageNumberError,
-                                UnsetAttributeError)
+from modules.exceptions import (
+    DocumentFileFormatError,
+    InputJsonStructureError,
+    PageNumberError,
+    UnsetAttributeError,
+)
 from modules.export import getLayoutHtml, getLayoutsHtml
-from modules.sections import (getPageColumns, getTitleRatios, prioritizeLabels,
-                              sectionByChapterNums, sectionByRatio)
+from modules.sections import (
+    getPageColumns,
+    getTitleRatios,
+    prioritizeLabels,
+    sectionByChapterNums,
+    sectionByRatio,
+)
 
 
 def overlapCheck(r1, r2):
@@ -203,7 +211,7 @@ class Document:
 
         elif b_type in ["figure", "table"]:
             snippet = block.crop_image(img)
-            img_name = str(page) + "-" + str(idx) + '_' + b_type + ".jpg"
+            img_name = str(page) + "-" + str(idx) + "_" + b_type + ".jpg"
             figure_path = figure_dir + img_name
             save_path = "../figures/" + img_name
 
@@ -211,19 +219,16 @@ class Document:
             block.set(text=save_path, inplace=True)
 
             if b_type == "table" and self.table_predictor:
-                snippet = cv2.cvtColor(snippet, cv2.COLOR_BGR2RGB)                
+                snippet = cv2.cvtColor(snippet, cv2.COLOR_BGR2RGB)
                 snippet = Image.fromarray(snippet)
                 df = self.table_predictor.get_table_data(
-                    snippet, 
-                    lang=self.lang, 
-                    debug=False, 
-                    threshold=0.7
-                    )
-                #   NOTE: when processing tables in the HTML you have to check whether you are 
-                        #   working with the image path or with DataFrame
+                    snippet, lang=self.lang, debug=False, threshold=0.7
+                )
+                #   NOTE: when processing tables in the HTML you have to check whether you are
+                #   working with the image path or with DataFrame
                 #   NOTE: the DataFrame can be converted back from the string to a DF
                 #   use: https://stackoverflow.com/questions/22604564/create-pandas-dataframe-from-a-string
-                
+
                 df_csv = df.to_csv(index=False)
                 block.set(text=df_csv, inplace=True)
 
@@ -261,6 +266,11 @@ class Document:
             segment_sections (bool): if True sections are segmented
             visualize (bool): if True detection visualizations are saved
         """
+
+        if self.table_predictor:
+            logging.info(
+                "Processing will take longer if table extraction is enabled. You can disable it by setting the table_predictor to None"
+            )
 
         if None in [self.predictor, self.metadata, self.images]:
             raise UnsetAttributeError(
@@ -508,7 +518,9 @@ class Document:
 
         pages = len(self.layouts)
         if pages < 1:
-            logging.warning("You have no document layouts to export. Output directory is created regardless.")
+            logging.warning(
+                "You have no document layouts to export. Output directory is created regardless."
+            )
         json_dir = self.output_path + "/jsons/"
         Path(json_dir).mkdir(parents=True, exist_ok=True)
 

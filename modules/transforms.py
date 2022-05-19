@@ -1,11 +1,11 @@
 """
 Copyright (C) 2021 Microsoft Corporation
 """
-import random
 import math
+import random
 
-import torch
 import PIL
+import torch
 from PIL import ImageFilter
 from torchvision.transforms import functional as F
 
@@ -22,15 +22,13 @@ def _flip_coco_person_keypoints(kps, width):
 
 def box_cxcywh_to_xyxy(x):
     x_c, y_c, w, h = x.unbind(-1)
-    b = [(x_c - 0.5 * w), (y_c - 0.5 * h),
-         (x_c + 0.5 * w), (y_c + 0.5 * h)]
+    b = [(x_c - 0.5 * w), (y_c - 0.5 * h), (x_c + 0.5 * w), (y_c + 0.5 * h)]
     return torch.stack(b, dim=-1)
 
 
 def box_xyxy_to_cxcywh(x):
     x0, y0, x1, y1 = x.unbind(-1)
-    b = [(x0 + x1) / 2, (y0 + y1) / 2,
-         (x1 - x0), (y1 - y0)]
+    b = [(x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0), (y1 - y0)]
     return torch.stack(b, dim=-1)
 
 
@@ -62,8 +60,8 @@ class RandomHorizontalFlip(object):
                 keypoints = _flip_coco_person_keypoints(keypoints, width)
                 target["keypoints"] = keypoints
         return image, target
-    
-    
+
+
 class RandomCrop(object):
     def __init__(self, prob, left_scale, top_scale, right_scale, bottom_scale):
         self.prob = prob
@@ -77,28 +75,34 @@ class RandomCrop(object):
             width, height = image.size
             left = int(math.floor(width * 0.5 * self.left_scale * random.random()))
             top = int(math.floor(height * 0.5 * self.top_scale * random.random()))
-            right = width - int(math.floor(width * 0.5 * self.right_scale * random.random()))
-            bottom = height - int(math.floor(height * 0.5 * self.bottom_scale * random.random()))
+            right = width - int(
+                math.floor(width * 0.5 * self.right_scale * random.random())
+            )
+            bottom = height - int(
+                math.floor(height * 0.5 * self.bottom_scale * random.random())
+            )
             cropped_image = image.crop((left, top, right, bottom))
             cropped_bboxes = []
             cropped_labels = []
             for bbox, label in zip(target["boxes"], target["labels"]):
-                bbox = [max(bbox[0], left) - left,
-                        max(bbox[1], top) - top,
-                        min(bbox[2], right) - left,
-                        min(bbox[3], bottom) - top]
+                bbox = [
+                    max(bbox[0], left) - left,
+                    max(bbox[1], top) - top,
+                    min(bbox[2], right) - left,
+                    min(bbox[3], bottom) - top,
+                ]
                 if bbox[0] < bbox[2] and bbox[1] < bbox[3]:
                     cropped_bboxes.append(bbox)
                     cropped_labels.append(label)
-                         
+
             if len(cropped_bboxes) > 0:
                 target["boxes"] = torch.as_tensor(cropped_bboxes, dtype=torch.float32)
                 target["labels"] = torch.as_tensor(cropped_labels, dtype=torch.int64)
                 return cropped_image, target
 
         return image, target
-    
-    
+
+
 class RandomBlur(object):
     def __init__(self, prob, max_radius):
         self.prob = prob
@@ -110,8 +114,8 @@ class RandomBlur(object):
             image = image.filter(filter=ImageFilter.GaussianBlur(radius=radius))
 
         return image, target
-    
-    
+
+
 class RandomResize(object):
     def __init__(self, prob, min_scale_factor, max_scale_factor):
         self.prob = prob
@@ -121,25 +125,29 @@ class RandomResize(object):
     def __call__(self, image, target):
         if random.random() < self.prob:
             prob = random.random()
-            scale_factor = prob*self.max_scale_factor + (1-prob)*self.min_scale_factor
+            scale_factor = (
+                prob * self.max_scale_factor + (1 - prob) * self.min_scale_factor
+            )
             new_width = int(round(scale_factor * image.width))
             new_height = int(round(scale_factor * image.height))
-            resized_image = image.resize((new_width, new_height), resample=PIL.Image.LANCZOS)
+            resized_image = image.resize(
+                (new_width, new_height), resample=PIL.Image.LANCZOS
+            )
             resized_bboxes = []
             resized_labels = []
             for bbox, label in zip(target["boxes"], target["labels"]):
-                bbox = [elem*scale_factor for elem in bbox]
+                bbox = [elem * scale_factor for elem in bbox]
                 if bbox[0] < bbox[2] - 1 and bbox[1] < bbox[3] - 1:
                     resized_bboxes.append(bbox)
                     resized_labels.append(label)
-                         
+
             if len(resized_bboxes) > 0:
                 target["boxes"] = torch.as_tensor(resized_bboxes, dtype=torch.float32)
                 target["labels"] = torch.as_tensor(resized_labels, dtype=torch.int64)
                 return resized_image, target
 
         return image, target
-    
+
 
 class Normalize(object):
     def __init__(self, mean, std):

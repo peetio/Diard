@@ -31,12 +31,12 @@ def main():
     predictor = ld.getPredictor()
     metadata = ld.getMetadata()
     source_dir = "./resources/pdfs/"
-    
+
     table_weights_path = "./resources/weights/pubtables1m_structure_detr_r18.pth"
     table_predictor = TableExtractor(table_weights_path)
 
     #   process single pdf
-    #filenames = ["example.pdf"]
+    # filenames = ["example.pdf"]
 
     #   process multiple pdfs
     filenames = os.listdir(source_dir)
@@ -62,6 +62,7 @@ def main():
         doc.orderLayouts()
         doc.saveLayoutsAsJson()
         doc.saveLayoutsAsHtml()
+
 
 if __name__ == "__main__":
     main()

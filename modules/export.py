@@ -1,5 +1,7 @@
 from io import StringIO
+
 import pandas as pd
+
 
 def getLayoutHtml(layout, section=None):
     """Saves HTML representation of single document page layout
@@ -164,7 +166,7 @@ def getListSpan(text, section):
 
 def getTableSpan(text, section):
     """Gets HTML code representing a table
-    
+
     Args:
         text (string): string containing the dataframe after .to_string()
         section (int): the current document section
@@ -174,22 +176,19 @@ def getTableSpan(text, section):
     """
     #   reconstruct dataframe from string
     table_str = StringIO(text)
-    df = pd.read_csv(table_str) #   TODO: maybe try sep=' '
-    
+    df = pd.read_csv(table_str)  #   TODO: maybe try sep=' '
+
     #   TODO: add support for more complex tables
     html_span = "<table class='" + str(section) + "'>"
     for row_idx in range(len(df)):
         html_span += "<tr>"
         for (col_idx, col_rows) in df.iteritems():
-            html_span += (
-                "<td>"
-                + col_rows[row_idx]
-                + "</td>"
-            )
-        html_span += "</tr>" 
+            html_span += "<td>" + col_rows[row_idx] + "</td>"
+        html_span += "</tr>"
 
     html_span += "</table>"
     return html_span
+
 
 def getTextSpan(text, filetype, section):
     """Gets HTML code representing a paragraph or title depending on the type
