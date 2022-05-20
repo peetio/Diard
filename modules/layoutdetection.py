@@ -106,7 +106,7 @@ class BatchPredictor:
                 results = self.model(batch)
                 instances = [result["instances"] for result in results]
                 predictions.extend(instances)
-        torch.cuda.empty_cache()
+        #torch.cuda.empty_cache()
         return predictions
 
 
