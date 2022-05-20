@@ -45,23 +45,6 @@ def main():
     #   process multiple pdfs
     filenames = os.listdir(source_dir)
 
-    source_dir = './resources/doc_images'
-    doc = Document(
-            source_dir,
-            predictor=predictor,
-            metadata=metadata,
-            lang=lang,
-            lang_detect=True,
-            langs=langs,
-            use_images=True
-        )
-
-    doc.extract_layouts(visualize=True, segment_sections=True)
-    doc.order_layouts()
-    doc.save_layouts_as_json()
-    doc.save_layouts_as_html()
-
-    """
     for filename in filenames:
         doc_path = source_dir + filename
         
@@ -80,7 +63,6 @@ def main():
         doc.order_layouts()
         doc.save_layouts_as_json()
         doc.save_layouts_as_html()
-    """
 
 if __name__ == "__main__":
     main()

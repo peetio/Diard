@@ -128,16 +128,153 @@ doc = Document(
 Lastly, compose the pipeline with all the steps you want. 
 
 For example:
+
 ```python
 doc.extract_layouts(visualize=True, segment_sections=True)
 doc.save_layouts_as_html()
 ```
 
-
 ## JSON / HTML Export
-TODO: add link to example on loading from JSON for text analysis
+There are two export / saving options, namely, as JSON and as HTML. The HTML representation is the more interesting option for evaluation or showcasing, and the JSON format is better for analysing purposes. TODO: here you should link to loading from JSON for text analysis
+
+Exporting each page separately along with a file containing the whole document can be done with the following Document object methods for JSON and HTML export respectively.
+
+```python
+doc.save_layouts_as_json()
+doc.save_layouts_as_html()
+```
+
+To export only a single document page, the following methods can be used where the page number is the only parameter. Please note that the 's' is removed from 'layouts'.
+
+```python
+doc.save_layout_as_json(4)
+doc.save_layout_as_html(4)
+```
+
+### JSON Format
+The document data is exported as JSON in the following format.
+
+JSON files representing a single document page are structured as explained below.
+
+**Text & Titles**
+```json
+{
+    "id": 0,
+    "type": "title",
+    "content": "Inhaltsverzeichnis\n\f",
+    "box": [
+      589,
+      298,
+      1119,
+      378
+    ],
+    "page": 1,
+    "section": 2
+  }
+```
+
+**Lists** (list items separated by '\n')
+```json
+{
+    "id": 5,
+    "type": "list",
+    "content": "Leistungspaket mit Anforderungen & Bemerkungen ‘PT1 Zentrum LKW’\n\nLeistungspaket mit Anforderungen & Bemerkungen ‘PT2 Post-Tour mit Lieferwagen (Vormittag)’",
+    "box": [
+      223,
+      755,
+      1480,
+      948
+    ],
+    "page": 3,
+    "section": 7
+}
+```
+
+**Figures** (relative path to cropped image from HTML and JSON output directories)
+```json
+{
+    "id": 2,
+    "type": "figure",
+    "content": "../figures/4-0_table.jpg",
+    "box": [
+      172,
+      497,
+      1533,
+      1924
+    ],
+    "page": 4,
+    "section": 9
+}
+```
+
+**Tables** (if table extraction is enabled, otherwise processed like figures)
+```json
+{
+      "id": 2,
+      "type": "table",
+      "content": {
+        "0": {
+          "0": "QEO1 \f",
+          "1": "QEO2 \f",
+          "2": "QEO3 \f",
+          "3": "QEO4A \f",
+          "4": "QEO5 \f"
+        },
+        "1": {
+          "0": "Notfall-Organisation \f",
+          "1": "Notfall-Hotline \f",
+          "2": "Fahrzeuge \f",
+          "3": "Elektronische Rechnungsstel- lung \f",
+          "4": "Datenaustausch und Reporting per elektronischer Übermittlung \f"
+        },
+        "2": {
+          "0": "Aufzeigen ei Dienst nicht : \f",
+          "1": "Nachweis eir \f",
+          "2": "Regelmässig \f",
+          "3": "Kann die Reı \f",
+          "4": "Schriftlicher | \f"
+        }
+      },
+      "box": [
+        172,
+        575,
+        1532,
+        1037
+      ],
+      "page": 5,
+      "section": 9
+}
+```
+
+Which represents a part of the table below.
+
+<p align="center">
+<img src="../resources/images/table_example.jpg" width="600"/>
+</p>
+
 
 ## Loading Layouts From JSON
+Let's say you want to order and export your layout as HTML after having already done the layout detection part of the pipeline.
+
+You can do this by doing the following. First, a Document object instance should be created with the doc_path parameter being the path to the original document or document images directory.
+
+```python
+doc_path = "./resources/pdfs/example.pdf"
+
+doc = Document(
+        source_path=doc_path
+    )
+```
+
+Next, call the 'load_layout_from_json' method with the path to the JSON file as the only parameter. Lastly, compose the rest of the pipeline to order and export the layouts.
+
+```python
+json_path = "./output/example/jsons/example.json"
+doc.load_layout_from_json(json_path)
+    
+doc.order_layouts()
+doc.save_layouts_as_html()
+```
 
 ## Output Directory Structure
 

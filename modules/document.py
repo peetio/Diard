@@ -192,6 +192,7 @@ class Document:
         self.layouts = []
         self.label_map = label_map
         self.ordered = False
+        self.images = []
 
         if use_images:
             self.set_images()
@@ -367,7 +368,11 @@ class Document:
         """Orders each page's layout based object bounding boxes"""
 
         if not self.ordered:
-            width = self.images[0].shape[1]
+            if self.images:
+                width = self.images[0].shape[1]
+            else:
+                image = convert_from_path(self.source_path)[0]
+                width, _ = image.size
 
             for page, layout in enumerate(self.layouts):
                 #   layout support up to 3 columns
@@ -604,35 +609,41 @@ class Document:
 
         blocks = []
         for b in layout_json:
-            x1, y1, x2, y2 = b["box"]
+            x1, y1, x2, y2 = b['box']
             rect = Rectangle(x1, y1, x2, y2)
-            type_ = b["type"]
+            type_ = b['type']
             content = b['content']
 
             if type_.lower() == "table":
                 df = pd.DataFrame.from_dict(b['content'])
                 content = df.to_csv(index=False)
 
-            block = TextBlock(
-                block=rect,
-                text=content,
-                id=b["id"],
-                type= type_
-            )
+            try:
+                block = TextBlock(
+                    block=rect,
+                    text=content,
+                    id=b['id'],
+                    type= type_
+                )
+                block.section = b['section']
+            #   section segmentation wasn't applied
+            except KeyError:
+                block = TextBlock(
+                    block=rect,
+                    text=content,
+                    id=b['id'],
+                    type= type_
+                )
             blocks.append(block)
 
         self.layouts.append(lp.Layout(blocks=blocks))
 
-    def load_layout_from_json(self, filename):
+    def load_layout_from_json(self, json_path):
         """Loads layouts from JSON file
 
         Args:
             filename (str): JSON filename
         """
-
-        if not filename.split(".")[-1] == "json":
-            filename += ".json"
-        json_path = self.output_path + "/jsons/" + filename
         with open(json_path, "r") as f:
             layout_json = json.load(f)
 

@@ -48,27 +48,32 @@ Diard
 │   main.py                                 # The document image analysis pipeline
 │   requirements.txt                        # List of required Python libraries
 │   README.md                               # This file
+│   LICENCSE                                # Apache 2.0 License
 │
 +---ditod                                   # Microsoft's DiT modules
++---detr                                    # Microsoft's DETR modules
 |
 +---modules
 │   │
-│   │   utils.py                            # Non-class specific functions
 │   │   document.py                         # Document class definition
 │   │   exceptions.py                       # Custom exceptions
+│   │   layoutdetection.py                  # Layout detection classes & functions
 │   │   sections.py                         # Section segmentation related functions
 │   │   export.py                           # Export/ evaluation related methods (HTML, JSON) 
+│   │   tables.py                           # Table extraction classes & functions
 │ 
 +---docs
 │   │
 │   │   setup_guide.md                      # Environment setup guide
+│   │   examples.md                         # Example code with detailed explanations
 │ 
 +---resources
 │   │
 │   │   stylesheet.css                      # Stylesheet for HTML visualization
 │   │   stylescript.js                      # Style script for HTML visualization
+│   │   structure_config.json               # Default args for table extraction
 │   │
-│   +---images                              # Images used in README.md
+│   +---images                              # Images used in docs & README
 │   │
 │   +---model_configs                       # Configuration files for DiT
 │   │
@@ -76,8 +81,14 @@ Diard
 │   │   │   example.pdf
 │   │   │   ...
 │   │
+│   +---doc_images                          # Example document images
+│   │   │   1.jpg 
+│   │   │   2.jpg 
+│   │   │   ...
+│   │
 │   +---weights                             # Storage for pre-trained model weights
-│       │   publaynet_dit-l_cascade.pth     # Weights used in initial release
+│       │   publaynet_dit-l_cascade.pth     # Weights used in initial release (layout detection)
+│       │   pubtables1m_structure_de...     # Weights used in initial release (table extraction)
 │
 +---output                                  # Default output dir (created by pipeline)
     │
