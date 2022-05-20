@@ -3,12 +3,14 @@ import json
 import logging
 import os
 import time
+from io import StringIO
 from pathlib import Path
 
 import cv2
 import langdetect
 import layoutparser as lp
 import numpy as np
+import pandas as pd
 import pycountry
 from detectron2.utils.visualizer import ColorMode, Visualizer
 from layoutparser.elements import Rectangle, TextBlock
@@ -222,7 +224,7 @@ class Document:
                 snippet = cv2.cvtColor(snippet, cv2.COLOR_BGR2RGB)
                 snippet = Image.fromarray(snippet)
                 df = self.table_predictor.get_table_data(
-                    snippet, lang=self.lang, debug=False, threshold=0.7
+                    snippet, lang=self.lang, debug=True, threshold=0.7
                 )
                 #   NOTE: when processing tables in the HTML you have to check whether you are
                 #   working with the image path or with DataFrame
@@ -467,10 +469,18 @@ class Document:
 
         layout_json = []
         for block in self.layouts[page]:
+            text = block.text
+            if block.type.lower() == "table" and not text.endswith("jpg"):
+                table_str = StringIO(text)
+                df = pd.read_csv(table_str)
+                text = df.to_dict()
+                print("type:", type(text))
+                print("content:", text)
+
             el = {
                 "id": block.id,
                 "type": block.type,
-                "content": block.text,
+                "content": text,
                 "box": block.coordinates,
                 "page": page,
             }

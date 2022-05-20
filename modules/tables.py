@@ -28,10 +28,7 @@ def cells_to_dataframe(cells):
     Returns:
         df (pandas.DataFrame): extracted table data
     """
-    print("Cells baby")
-    print(cells)
-    print(type(cells))
-    print("Cells stop baby")
+
     d = {}
     for cell in cells:
         if cell["column"] not in d.keys():
@@ -54,7 +51,7 @@ def set_cell_text(cells, image, lang="eng", clean=False):
         #   crop & pad image
         xmin, ymin, xmax, ymax = cell["bbox"]
         roi = image.crop((xmin, ymin, xmax, ymax))
-        roi = add_padding(roi, 20)
+        roi = add_padding(roi, 30)
 
         #   extract text from region of interest
         text = image_to_string(
@@ -234,7 +231,13 @@ def visualize_structure(image, objs):
     image = np.array(image)
     for obj in objs:
         xmin, ymin, xmax, ymax = obj["bbox"]
-        cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (245, 105, 66), 2)
+        cv2.rectangle(
+                image, 
+                (xmin, ymin), 
+                (xmax, ymax), 
+                (245, 105, 66), 
+                2
+                )
     image = image[:, :, ::-1].copy()
     return image
 
@@ -254,8 +257,8 @@ def add_padding(image, padding=50):
     """
 
     w, h = image.size
-    new_w = w + (padding * 2)
-    new_h = h + (padding * 2)
+    new_w = w + (padding*2)
+    new_h = h + (padding*2)
     result = Image.new(image.mode, (new_w, new_h), (255, 255, 255))
     result.paste(image, (padding, padding))
     return result
@@ -319,11 +322,12 @@ def get_model(args, device):
         the model, criterion, and postprocessors
             (see official table-transformer repository for more details)
     """
-    print("Args is of type:", type(args))
     model, criterion, postprocessors = build_model(args)
     model.to(device)
     if args.model_load_path:
-        print("loading model from checkpoint")
+        logging.info(
+            "Loading pre-trained table structure recognition model from checkpoint"
+        )
         loaded_state_dict = torch.load(args.model_load_path, map_location=device)
         model_state_dict = model.state_dict()
         pretrained_dict = {
@@ -356,17 +360,15 @@ class TableExtractor:
 
         self.normalize = R.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 
-    def predict(self, image, padding=100):
+    def predict(self, image):
         """Runs inference on given image
 
         Args:
             image (PIL.Image): image containing only table
-            padding (int, optional): padding to be added around table. Defaults to 100
 
         Returns:
             dictionary containing score, bboxes, and label of each prediction
         """
-        image = add_padding(image, padding=padding)
 
         w, h = image.size
 
@@ -397,13 +399,18 @@ class TableExtractor:
         Returns:
             df (pandas.DataFrame): extracted table data
         """
-        results = self.predict(image, padding=100)
 
+        #   pre-trained model uses "padded" tables
+        padding = 50
+        image = add_padding(image)
+        results = self.predict(image)
         #   conversion to objects w/ score threshold
         objs = predictions_to_objects(results, get_class_map(key="index"), threshold)
 
         #   align columns and rows to table border
-        xmin, ymin, xman, ymax = padding, padding, w - padding, h - padding
+        w, h = image.size
+        #   assuming we work with cropped out table
+        xmin, ymin, xman, ymax = padding, padding, w - padding, h - padding 
         table_bbox = [xmin, ymin, xman, ymax]
         objs = border_align(objs, table_bbox)
 

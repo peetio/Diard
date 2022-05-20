@@ -95,7 +95,7 @@ def getHtmlSpanByType(block, section):
     #   TODO: add table support
     elif filetype in ["figure", "table"]:
         coords = block.block.coordinates
-        if filetype == "table" and not text[-3:] == "jpg":
+        if filetype == "table" and not text.endswith("jpg"):
             html_span = getTableSpan(text, section)
         else:
             html_span = getImageSpan(text, coords, section)
@@ -176,7 +176,7 @@ def getTableSpan(text, section):
     """
     #   reconstruct dataframe from string
     table_str = StringIO(text)
-    df = pd.read_csv(table_str)  #   TODO: maybe try sep=' '
+    df = pd.read_csv(table_str)
 
     #   TODO: add support for more complex tables
     html_span = "<table class='" + str(section) + "'>"
