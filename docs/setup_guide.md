@@ -66,7 +66,7 @@ pip install layoutparser
 
 ## STEP 7 - Python Libraries
 
-Install the required Python libraries from the root of the repository. You can also manually install them by opening the [requirements.txt](../requirements.txt) file.
+Install the required Python libraries from the root of the repository. Don't forget to source into your virtual environment if applicable. You can also manually install them by opening the [requirements.txt](../requirements.txt) file.
 
 ```bash
 pip install -r requirements.txt
