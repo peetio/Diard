@@ -57,12 +57,15 @@ def main():
         )
 
         #   extract & save layout
+        doc.loadLayoutFromJson('example.json')
+        print(doc.layouts)
+        """
         doc.docToImages()
         doc.extractLayouts(visualize=True, segment_sections=True)
         doc.orderLayouts()
         doc.saveLayoutsAsJson()
         doc.saveLayoutsAsHtml()
-
+        """
 
 if __name__ == "__main__":
     main()

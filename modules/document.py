@@ -474,8 +474,6 @@ class Document:
                 table_str = StringIO(text)
                 df = pd.read_csv(table_str)
                 text = df.to_dict()
-                print("type:", type(text))
-                print("content:", text)
 
             el = {
                 "id": block.id,
@@ -585,11 +583,18 @@ class Document:
         for b in layout_json:
             x1, y1, x2, y2 = b["box"]
             rect = Rectangle(x1, y1, x2, y2)
+            type_ = b["type"]
+            content = b['content']
+
+            if type_.lower() == "table":
+                df = pd.DataFrame.from_dict(b['content'])
+                content = df.to_csv(index=False)
+
             block = TextBlock(
                 block=rect,
-                text=b["content"],
+                text=content,
                 id=b["id"],
-                type=self.label_map.index(b["type"]),
+                type= type_
             )
             blocks.append(block)
 
