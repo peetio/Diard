@@ -224,7 +224,7 @@ class Document:
                 snippet = cv2.cvtColor(snippet, cv2.COLOR_BGR2RGB)
                 snippet = Image.fromarray(snippet)
                 df = self.table_predictor.get_table_data(
-                    snippet, lang=self.lang, debug=True, threshold=0.7
+                    snippet, lang=self.lang, debug=False, threshold=0.7
                 )
                 #   NOTE: when processing tables in the HTML you have to check whether you are
                 #   working with the image path or with DataFrame
