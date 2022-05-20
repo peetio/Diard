@@ -2,7 +2,6 @@ archive/
 diardenv/
 output/
 resources/weights/
-resources/pdfs/*
 notes.md
 
 # Byte-compiled / optimized / DLL files
