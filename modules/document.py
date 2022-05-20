@@ -25,6 +25,7 @@ from modules.exceptions import (
     PageNumberError,
     UnsetAttributeError,
 )
+
 from modules.export import getLayoutHtml, getLayoutsHtml
 from modules.sections import (
     getPageColumns,
@@ -34,12 +35,25 @@ from modules.sections import (
     sectionByRatio,
 )
 
+def numbered_filenames_check(filenames):
+    """Checks if all filenames consist of only a number
+
+    Args:
+        filenames (list): list of filenames
+
+    Returns:
+        True if all filenames are numbered and contain no other chars besides file extension
+    """
+    numbered = all(map(lambda fn: ".".join(fn.split(".")[:-1]).isdigit(), filenames))
+    return numbered
 
 def overlapCheck(r1, r2):
     """Checks if two rectangles overlap
+
     Args:
         r1 (layoutparser.elements.Rectangle): rectangle with tl and br coordinates
         r2 (layoutparser.elements.Rectangle): rectangle with tl and br coordinates
+
     Returns:
         True if given rectangles overlap
     """
@@ -125,6 +139,7 @@ class Document:
         lang="eng",
         lang_detect=False,
         langs=None,
+        use_images=False,
         label_map=["text", "title", "list", "table", "figure"],
     ):
         """Creates instance of Document object
@@ -137,15 +152,22 @@ class Document:
             lang (string, optional): language used in the document. Defaults to "eng" or English (ISO 639-3 format)
             lang_detect (bool, optional): if True language detection is used
             langs (list, optional): languages used in documents (ISO 639-3 format)
+            use_images (bool, optional): if True images are loaded instead of a document (e.g, .pdf)
             label_map (list, optional): label map used by the model. Defaults to example label map
         """
+        #   e.g, "/resources/pdfs/example.pdf" -> "example.pdf"
+        #           or "/resources/doc_images" -> "doc_images"
         name = source_path.split("/")[-1]
-        file_format = name.split(".")[-1]
-        if file_format not in ["pdf"]:
-            raise DocumentFileFormatError(name, file_format)
+        if use_images:
+            self.name = name
+        else:
+            #   "example.filename.pdf" -> "example.filename"
+            file_format = name.split(".")[-1]
+            if file_format not in ["pdf"]:
+                raise DocumentFileFormatError(name, file_format)
+            self.name = ".".join(name.split(".")[:-1])
 
-        self.name = ".".join(name.split(".")[:-1])
-        self.file_format = file_format
+        print(self.name)    #   TODO: remove this, just a check for image loading
         self.source_path = source_path
 
         if output_path is None:
@@ -169,6 +191,9 @@ class Document:
         self.label_map = label_map
         self.ordered = False
 
+        if use_images:
+            self.set_images()
+
     def docToImages(self):
         """Converts each page of a document to images"""
         pil_imgs = convert_from_path(self.source_path)
@@ -186,7 +211,7 @@ class Document:
         Return:
             the extracted text as a string
         """
-        #   TODO: maybe you can add an option to clean the OCR
+        #   TODO: maybe you can add an option to clean the OCR output
         snippet = block.pad(left=5, right=5, top=5, bottom=5).crop_image(img)
         text = image_to_string(snippet, lang=self.lang)
         return text
@@ -648,3 +673,27 @@ class Document:
         r_labels = sectionByRatio(ratios, self.name)
         labels = prioritizeLabels(self.layouts, cn_labels, r_labels)
         self.__setSections(labels)
+
+    def set_images(self):
+        """Sets document images found in given source path
+
+        Returns:
+            a list of ndarray images
+        """
+
+        img_filenames = os.listdir(self.source_path)
+
+        #   sort numbered filenames to keep page order in output
+        numbered = numbered_filenames_check(img_filenames)
+        if numbered:
+            img_filenames.sort(key=lambda fn: int(".".join(fn.split(".")[:-1])))
+
+        images = []
+        for fn in img_filenames:
+            #   TODO: test if it makes a difference when you don't or when you do use a '/' in the source_path attribute
+            img_path = self.source_path + '/' + fn
+            img = cv2.imread(img_path)
+            images.append(img)
+            
+        self.images = images
+
