@@ -43,7 +43,7 @@ pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@v
 A Tesseract OCR Python wrapper is used for text recognition. For more information about the installation you can refer to the [pytesseract](https://github.com/madmaze/pytesseract) GitHub repo.
 
 ```bash
-pip install pip install pytesseract
+pip install pytesseract
 ```
 
 Next, you need to download additional language packs. You can download the language packs from either the [tessdata](https://github.com/tesseract-ocr/tessdata) or [tessdata_fast](https://github.com/tesseract-ocr/tessdata_fast) repository. Keep in mind that you have to make a speed/accuracy compromise when using the fast packs. 
