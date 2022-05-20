@@ -26,13 +26,13 @@ from modules.exceptions import (
     UnsetAttributeError,
 )
 
-from modules.export import getLayoutHtml, getLayoutsHtml
+from modules.export import get_layout_html, get_layouts_html
 from modules.sections import (
-    getPageColumns,
-    getTitleRatios,
-    prioritizeLabels,
-    sectionByChapterNums,
-    sectionByRatio,
+    get_page_columns,
+    get_title_ratios,
+    prioritize_labels,
+    section_by_chapter_nums,
+    section_by_ratio,
 )
 
 def numbered_filenames_check(filenames):
@@ -152,7 +152,7 @@ class Document:
             lang (string, optional): language used in the document. Defaults to "eng" or English (ISO 639-3 format)
             lang_detect (bool, optional): if True language detection is used
             langs (list, optional): languages used in documents (ISO 639-3 format)
-            use_images (bool, optional): if True images are loaded instead of a document (e.g, .pdf)
+            use_images (bool, optional): if True images are loaded from source_path directory instead document
             label_map (list, optional): label map used by the model. Defaults to example label map
         """
         #   e.g, "/resources/pdfs/example.pdf" -> "example.pdf"
@@ -374,7 +374,7 @@ class Document:
             for page, layout in enumerate(self.layouts):
                 #   layout support up to 3 columns
                 #   split layout based on block center (x-axis)
-                cols = getPageColumns(layout)
+                cols = get_page_columns(layout)
                 blocks = layout._blocks
                 if cols == 1:
                     left_blocks = sorted(blocks, key=lambda b: b.block.y_1)
@@ -576,7 +576,7 @@ class Document:
         html_dir = self.output_path + "/htmls/"
         Path(html_dir).mkdir(parents=True, exist_ok=True)
         html_path = html_dir + str(page) + ".html"
-        layout_html = getLayoutHtml(self.layouts[page])
+        layout_html = get_layout_html(self.layouts[page])
 
         html_path = html_dir + str(page) + ".html"
         with open(html_path, "w") as f:
@@ -592,7 +592,7 @@ class Document:
             self.save_layout_as_html(page)
 
         html_path = html_dir + self.name + ".html"
-        layouts_html = getLayoutsHtml(self.layouts)
+        layouts_html = get_layouts_html(self.layouts)
 
         with open(html_path, "w") as f:
             f.write(layouts_html)
@@ -668,10 +668,10 @@ class Document:
 
     def __segment_sections(self):
         """Segments sections based on numbering and natural breaks"""
-        cn_labels = sectionByChapterNums(self.layouts)
-        ratios = getTitleRatios(self.layouts)
-        r_labels = sectionByRatio(ratios, self.name)
-        labels = prioritizeLabels(self.layouts, cn_labels, r_labels)
+        cn_labels = section_by_chapter_nums(self.layouts)
+        ratios = get_title_ratios(self.layouts)
+        r_labels = section_by_ratio(ratios, self.name)
+        labels = prioritize_labels(self.layouts, cn_labels, r_labels)
         self.__set_sections(labels)
 
     def set_images(self):

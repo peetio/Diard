@@ -28,8 +28,8 @@ def main():
         threshold=0.65,
     )
 
-    predictor = ld.getPredictor()
-    metadata = ld.getMetadata()
+    predictor = ld.get_predictor()
+    metadata = ld.get_metadata()
     source_dir = "./resources/pdfs/"
 
     table_weights_path = "./resources/weights/pubtables1m_structure_detr_r18.pth"
@@ -54,10 +54,10 @@ def main():
         use_images=True
     )
 
-    doc.extractLayouts(visualize=True, segment_sections=True)
-    doc.orderLayouts()
-    doc.saveLayoutsAsJson()
-    doc.saveLayoutsAsHtml()
+    doc.extract_layouts(visualize=True, segment_sections=True)
+    doc.order_layouts()
+    doc.save_layouts_as_json()
+    doc.save_layouts_as_html()
 
     """
     filenames = os.listdir(source_dir)
@@ -76,12 +76,12 @@ def main():
         )
 
         #   extract & save layout
-        doc.docToImages()
-        doc.extractLayouts(visualize=True, segment_sections=True)
-        doc.orderLayouts()
-        doc.saveLayoutsAsJson()
-        doc.saveLayoutsAsHtml()
-
+        doc.doc_to_images()
+        doc.extract_layouts(visualize=True, segment_sections=True)
+        doc.order_layouts()
+        doc.save_layouts_as_json()
+        doc.save_layouts_as_html()
     """
+
 if __name__ == "__main__":
     main()

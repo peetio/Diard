@@ -4,7 +4,7 @@ import jenkspy
 import pandas as pd
 
 
-def getRatio(coords, text):
+def get_ratio(coords, text):
     """Gets the surface over char count ratio
 
     Args:
@@ -37,7 +37,7 @@ def getRatio(coords, text):
     return ratio
 
 
-def applyJenks(ratios, n_classes=3):
+def apply_jenks(ratios, n_classes=3):
     """Applies Jenks Natural Breaks Optimization to find similar titles
 
     Args:
@@ -66,7 +66,7 @@ def applyJenks(ratios, n_classes=3):
     return reordered_labels
 
 
-def mapJenksLabels(ratios, labels, label_map={0: "heading", 1: "sub", 2: "random"}):
+def map_jenks_labels(ratios, labels, label_map={0: "heading", 1: "sub", 2: "random"}):
     """Maps Jenks Algorithm label output to title categories
 
     Args:
@@ -139,7 +139,7 @@ def mapJenksLabels(ratios, labels, label_map={0: "heading", 1: "sub", 2: "random
     return mapped_labels
 
 
-def sectionByRatio(ratios, filename):
+def section_by_ratio(ratios, filename):
     """Finds sections based on ratio (bounding box surface / char count)
 
     Args:
@@ -154,8 +154,8 @@ def sectionByRatio(ratios, filename):
     mapped_labels = []
 
     if len(ratios) > n_classes:
-        labels = applyJenks(ratios, n_classes)
-        mapped_labels = mapJenksLabels(ratios, labels)
+        labels = apply_jenks(ratios, n_classes)
+        mapped_labels = map_jenks_labels(ratios, labels)
     else:
         logging.warning(
             f"Not enough titles detected in '{filename}' to find natural breaks, using only chapter numbering. Minimum number of titles is {n_classes}"
@@ -164,7 +164,7 @@ def sectionByRatio(ratios, filename):
     return mapped_labels
 
 
-def getPageColumns(layout):
+def get_page_columns(layout):
     """Gets the number of columns used in the layout
 
     Args:
@@ -201,7 +201,7 @@ def getPageColumns(layout):
     return cols
 
 
-def prioritizeLabels(layouts, cn_labels, r_labels):
+def prioritize_labels(layouts, cn_labels, r_labels):
     """Compares segmentation method outputs to get best of both worlds
 
     Args:
@@ -244,7 +244,7 @@ def prioritizeLabels(layouts, cn_labels, r_labels):
     return labels
 
 
-def sectionByChapterNums(layouts):
+def section_by_chapter_nums(layouts):
     """Finds sections based on the chapter numbering
 
     Args:
@@ -278,7 +278,7 @@ def sectionByChapterNums(layouts):
     return labels
 
 
-def getTitleRatios(layouts):
+def get_title_ratios(layouts):
     """Gets the ratio (bounding box surface / char count) for each title
 
     Args:
@@ -293,7 +293,7 @@ def getTitleRatios(layouts):
         for b in layout:
             if b.type.lower() == "title":
                 t = b.text
-                ratio = getRatio(b.block.coordinates, t)
+                ratio = get_ratio(b.block.coordinates, t)
                 ratios.append(ratio)
 
     return ratios

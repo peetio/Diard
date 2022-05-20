@@ -3,7 +3,7 @@ from io import StringIO
 import pandas as pd
 
 
-def getLayoutHtml(layout, section=None):
+def get_layout_html(layout, section=None):
     """Saves HTML representation of single document page layout
 
     Args:
@@ -32,7 +32,7 @@ def getLayoutHtml(layout, section=None):
             #   no section segmentation used
             pass
 
-        html_span = getHtmlSpanByType(b, section)
+        html_span = get_html_span_by_type(b, section)
         html += html_span
 
     if single:
@@ -41,7 +41,7 @@ def getLayoutHtml(layout, section=None):
         return (html, section)
 
 
-def getLayoutsHtml(layouts):
+def get_layouts_html(layouts):
     """Gets HTML representation of a whole document layout
 
     Args:
@@ -68,14 +68,14 @@ def getLayoutsHtml(layouts):
 
     section = 0
     for page in range(len(layouts)):
-        html_span, section = getLayoutHtml(layouts[page], section)
+        html_span, section = get_layout_html(layouts[page], section)
         html += html_span
 
     html += "</div></body>"
     return html
 
 
-def getHtmlSpanByType(block, section):
+def get_html_span_by_type(block, section):
     """Gets HTML code representing a document objects content based on its type
 
     Args:
@@ -90,23 +90,23 @@ def getHtmlSpanByType(block, section):
     text = str(block.text)
 
     if filetype in ["text", "title"]:
-        html_span = getTextSpan(text, filetype, section)
+        html_span = get_text_span(text, filetype, section)
 
     #   TODO: add table support
     elif filetype in ["figure", "table"]:
         coords = block.block.coordinates
         if filetype == "table" and not text.endswith("jpg"):
-            html_span = getTableSpan(text, section)
+            html_span = get_table_span(text, section)
         else:
-            html_span = getImageSpan(text, coords, section)
+            html_span = get_image_span(text, coords, section)
 
     elif filetype == "list":
-        html_span = getListSpan(text, section)
+        html_span = get_list_span(text, section)
 
     return html_span
 
 
-def getImageSpan(path, coords, section):
+def get_image_span(path, coords, section):
     """Gets HTML code representing an image
 
     Args:
@@ -138,7 +138,7 @@ def getImageSpan(path, coords, section):
     return html_span
 
 
-def getListSpan(text, section):
+def get_list_span(text, section):
     """Gets HTML code representing a list
 
     Args:
@@ -164,7 +164,7 @@ def getListSpan(text, section):
     return html_span
 
 
-def getTableSpan(text, section):
+def get_table_span(text, section):
     """Gets HTML code representing a table
 
     Args:
@@ -190,7 +190,7 @@ def getTableSpan(text, section):
     return html_span
 
 
-def getTextSpan(text, filetype, section):
+def get_text_span(text, filetype, section):
     """Gets HTML code representing a paragraph or title depending on the type
 
     Args:
