@@ -145,7 +145,7 @@ class LayoutDetection:
         self.batch_size = batch_size
         self.workers = workers
 
-    def getPredictor(self):
+    def get_predictor(self):
         """Gets BatchPredictor instance
 
         Returns:
@@ -159,7 +159,7 @@ class LayoutDetection:
         )
         return predictor
 
-    def getMetadata(self):
+    def get_metadata(self):
         """Gets metadata for Detectron2 Visualizer
 
         Returns:
