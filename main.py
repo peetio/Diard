@@ -51,7 +51,7 @@ def main():
         lang=lang,
         lang_detect=True,
         langs=langs,
-        use_images=True
+        use_images=True,
     )
 
     doc.extract_layouts(visualize=True, segment_sections=True)
@@ -82,6 +82,7 @@ def main():
         doc.save_layouts_as_json()
         doc.save_layouts_as_html()
     """
+
 
 if __name__ == "__main__":
     main()

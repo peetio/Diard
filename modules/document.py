@@ -19,21 +19,14 @@ from PIL import Image
 from pytesseract import image_to_string
 from tqdm import tqdm
 
-from modules.exceptions import (
-    DocumentFileFormatError,
-    InputJsonStructureError,
-    PageNumberError,
-    UnsetAttributeError,
-)
-
+from modules.exceptions import (DocumentFileFormatError,
+                                InputJsonStructureError, PageNumberError,
+                                UnsetAttributeError)
 from modules.export import get_layout_html, get_layouts_html
-from modules.sections import (
-    get_page_columns,
-    get_title_ratios,
-    prioritize_labels,
-    section_by_chapter_nums,
-    section_by_ratio,
-)
+from modules.sections import (get_page_columns, get_title_ratios,
+                              prioritize_labels, section_by_chapter_nums,
+                              section_by_ratio)
+
 
 def numbered_filenames_check(filenames):
     """Checks if all filenames consist of only a number
@@ -46,6 +39,7 @@ def numbered_filenames_check(filenames):
     """
     numbered = all(map(lambda fn: ".".join(fn.split(".")[:-1]).isdigit(), filenames))
     return numbered
+
 
 def overlap_check(r1, r2):
     """Checks if two rectangles overlap
@@ -167,7 +161,7 @@ class Document:
                 raise DocumentFileFormatError(name, file_format)
             self.name = ".".join(name.split(".")[:-1])
 
-        print(self.name)    #   TODO: remove this, just a check for image loading
+        print(self.name)  #   TODO: remove this, just a check for image loading
         self.source_path = source_path
 
         if output_path is None:
@@ -609,18 +603,13 @@ class Document:
             x1, y1, x2, y2 = b["box"]
             rect = Rectangle(x1, y1, x2, y2)
             type_ = b["type"]
-            content = b['content']
+            content = b["content"]
 
             if type_.lower() == "table":
-                df = pd.DataFrame.from_dict(b['content'])
+                df = pd.DataFrame.from_dict(b["content"])
                 content = df.to_csv(index=False)
 
-            block = TextBlock(
-                block=rect,
-                text=content,
-                id=b["id"],
-                type= type_
-            )
+            block = TextBlock(block=rect, text=content, id=b["id"], type=type_)
             blocks.append(block)
 
         self.layouts.append(lp.Layout(blocks=blocks))
@@ -691,9 +680,8 @@ class Document:
         images = []
         for fn in img_filenames:
             #   TODO: test if it makes a difference when you don't or when you do use a '/' in the source_path attribute
-            img_path = self.source_path + '/' + fn
+            img_path = self.source_path + "/" + fn
             img = cv2.imread(img_path)
             images.append(img)
-            
-        self.images = images
 
+        self.images = images

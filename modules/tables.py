@@ -18,8 +18,8 @@ sys.path.append("detr")
 import datasets.transforms as R
 from models import build_model
 
-
 #   table structuring
+
 
 def cells_to_dataframe(cells):
     """Gets pandas DataFrame from cells
@@ -233,13 +233,7 @@ def visualize_structure(image, objs):
     image = np.array(image)
     for obj in objs:
         xmin, ymin, xmax, ymax = obj["bbox"]
-        cv2.rectangle(
-                image, 
-                (xmin, ymin), 
-                (xmax, ymax), 
-                (245, 105, 66), 
-                2
-                )
+        cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (245, 105, 66), 2)
     image = image[:, :, ::-1].copy()
     return image
 
@@ -259,8 +253,8 @@ def add_padding(image, padding=50):
     """
 
     w, h = image.size
-    new_w = w + (padding*2)
-    new_h = h + (padding*2)
+    new_w = w + (padding * 2)
+    new_h = h + (padding * 2)
     result = Image.new(image.mode, (new_w, new_h), (255, 255, 255))
     result.paste(image, (padding, padding))
     return result
@@ -349,9 +343,7 @@ class TableExtractor:
         Args:
             weight_path (string): path to pre-trained weights
         """
-        args = load_args(
-            "./resources/structure_config.json"
-        )  #   TODO: we might need to change ../ to ./
+        args = load_args("./resources/structure_config.json")  #   NOTE: hard coded
         args["model_load_path"] = weight_path
         args = type("Args", (object,), args)
 
@@ -412,7 +404,7 @@ class TableExtractor:
         #   align columns and rows to table border
         w, h = image.size
         #   assuming we work with cropped out table
-        xmin, ymin, xman, ymax = padding, padding, w - padding, h - padding 
+        xmin, ymin, xman, ymax = padding, padding, w - padding, h - padding
         table_bbox = [xmin, ymin, xman, ymax]
         objs = border_align(objs, table_bbox)
 
