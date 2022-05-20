@@ -33,7 +33,7 @@ def main():
     metadata = ld.get_metadata()
     source_dir = "./resources/pdfs/"
 
-    #   language used most of your documents (ISO 639-3 format)
+    #   language used in most of your documents (ISO 639-3 format)
     lang = "deu"  
 
     #   only useful if lang_detect=True (all specified language packs should be installed)
