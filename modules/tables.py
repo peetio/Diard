@@ -9,15 +9,17 @@ import cv2
 import numpy as np
 import pandas as pd
 import torch
-import torchvision.transforms.functional as F
 from PIL import Image
 from pytesseract import image_to_string
 from torch.utils.data import DataLoader
+from torchvision.transforms import functional as F
 
 sys.path.append("detr")
 import datasets.transforms as R
 from models import build_model
 
+
+#   table structuring
 
 def cells_to_dataframe(cells):
     """Gets pandas DataFrame from cells
