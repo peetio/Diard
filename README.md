@@ -1,5 +1,5 @@
 <p align="center">
-<img src="resources/images/example.png" width="700"/>
+<img src="resources/images/showcase.png" width="1000"/>
 </p>
 
 # Table of Contents

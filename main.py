@@ -25,7 +25,7 @@ def main():
         weights_path=weights_path,
         batch_size=1,
         workers=1,
-        threshold=0.75,
+        threshold=0.65,
     )
 
     predictor = ld.getPredictor()
