@@ -1,7 +1,7 @@
 timm==0.5.4
 yake==0.4.8
-pycountry=22.3.5
-langdetect=1.0.9
+pycountry==22.3.5
+langdetect==1.0.9
 scipy
 shapely
 pdf2image
