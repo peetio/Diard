@@ -45,7 +45,8 @@ A Tesseract OCR Python wrapper is used for text recognition. For more informatio
 But first of all you should install the Tesseract engine. For Linux users the command below should suffice, others might want to look at the [official documentation](https://tesseract-ocr.github.io/tessdoc/Installation.html)
 
 ```bash
-sudo apt install tesseract-ocr-deu
+# or install package with language pack (e.g., tesseract-ocr-eng or tesseract-ocr-deu) (ISO 639-3 format)
+sudo apt install tesseract-ocr
 ```
 
 The Python wrapper can simply be installed with pip using the following command.

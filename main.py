@@ -23,7 +23,7 @@ def main():
     ld = LayoutDetection(
         cfg_path=ld_config_path,
         weights_path=ld_weights_path,
-        device='cuda',
+        device='cuda', # change to cpu if you don't have CUDA enabled GPU
         batch_size=1,
         workers=1,
         threshold=0.65,
@@ -33,8 +33,11 @@ def main():
     metadata = ld.get_metadata()
     source_dir = "./resources/pdfs/"
 
-    lang = "deu"  #   language used most of your documents
-    langs = ["eng", "fra", "deu"]  #   only useful if lang_detect=True
+    #   language used most of your documents (ISO 639-3 format)
+    lang = "deu"  
+
+    #   only useful if lang_detect=True (all specified language packs should be installed)
+    langs = ["eng", "fra", "deu"]  
 
     #   process single pdf
     # filenames = ["example.pdf"]
@@ -51,7 +54,7 @@ def main():
             metadata=metadata,
             lang=lang,
             lang_detect=True,
-            langs=langs,
+            langs=langs
         )
 
         #   extract & export layouts
