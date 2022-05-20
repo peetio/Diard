@@ -96,8 +96,43 @@ Lastly, you can [export](#json--html-export) your document reproduced in HTML or
 
 If you set 'section_segmentation' to True, and either page numbering or headings of varying size are used in your document, then you should get a table of contents which you can use to navigate through the pipeline output per section. Note that the segmentation is far from perfect and only works in the previously listed scenarios.
 
+One more thing. We also support [table extraction](#enabling-table-extraction) but it's not enabled by default. If you don't enable table extraction, they will be stored and displayed as figures.
+
 ## Using Images Instead of Documents
-TODO: talk about how you can order your pages by using name numbering
+You can also use document images as input to the pipeline. This can be done by making the following changes.
+
+First, set a variable containing the path to the directory with document images. Before proceeding you should make sure that the directory contains only images and nothing else. 
+
+For example:
+
+```python
+source_dir = './resources/doc_images'
+```
+
+The above variable now points to our example document images. If you took a look into the doc_images directory, you might have noticed that the image filenames are numbers (e.g. '1.jpg', '2.jpg', ..., 'n.jpg'). You should do the same if you want your document reproduction to be in the original order. If they are not numbered, the JSON and HTML output files will have the same filename with a different extension.
+
+Next, create a Document object instance with the parameter 'use_images' set to True.
+
+```python
+doc = Document(
+            source_dir,
+            predictor=predictor,
+            metadata=metadata,
+            lang=lang,
+            lang_detect=True,
+            langs=langs,
+            use_images=True
+        )
+```
+
+Lastly, compose the pipeline with all the steps you want. 
+
+For example:
+```python
+doc.extract_layouts(visualize=True, segment_sections=True)
+doc.save_layouts_as_html()
+```
+
 
 ## JSON / HTML Export
 TODO: add link to example on loading from JSON for text analysis
