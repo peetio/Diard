@@ -58,7 +58,7 @@ def set_cell_text(cells, image, lang="eng", clean=False):
         #   extract text from region of interest
         text = image_to_string(
             roi, lang=lang
-        )  #    TODO: find the optimal PSM (e.g., 'config="--psm 6"')
+        )
         if clean:
             text.strip()
             text = text.replace("\n", " ")
@@ -343,20 +343,20 @@ def get_model(args, device):
 
 
 class TableExtractor:
-    def __init__(self, weight_path):
+    def __init__(self, weight_path, device):
         """Creates instance of TableExtractor object
 
         Args:
             weight_path (string): path to pre-trained weights
+            device (string): device to be used by model, e.g., "cuda" (GPU) or "cpu"
         """
         args = load_args(
             "./resources/structure_config.json"
-        )  #   TODO: we might need to change ../ to ./
+        )
         args["model_load_path"] = weight_path
         args = type("Args", (object,), args)
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.device = "cpu"  #   TODO: remove this
+        self.device = device
         self.model, criterion, self.postprocessors = get_model(args, self.device)
         self.model.eval()
 

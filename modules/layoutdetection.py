@@ -37,7 +37,7 @@ class BatchPredictor:
             cfg (detectron2.config.config.CfgNode): Detectron2 config instance
             label_map (list): label map used by the model
             batch_size (int): batch size. Defaults to 1
-            workers (int): number of workers. Defaults to 1 #   TODO: 0 might be a better default if it's auto selection
+            workers (int): number of workers. Defaults to 1
         """
         self.cfg = cfg.clone()  #   cfg can be modified by model
         self.label_map = label_map
@@ -115,8 +115,9 @@ class LayoutDetection:
         self,
         cfg_path,
         weights_path,
+        device="cpu",
         batch_size=1,
-        workers=1,  #   TODO: try to set 0 workers, does this auto configure the right amount of workers?
+        workers=1,
         threshold=0.75,
         label_map=["text", "title", "list", "table", "figure"],
     ):
@@ -125,6 +126,7 @@ class LayoutDetection:
         Args:
             cfg_path (string): path to config file
             weights_path (string): path to pre-trained model weights
+            device (string): device to be used by model, e.g., "cuda" (GPU) or "cpu"
             batch_size (int, optional): batch size. Defaults to 1
             workers (int, optional): number of workers. Defaults to 1
             threshold (float, optional): score threshold. Defaults to 0.75
@@ -136,7 +138,6 @@ class LayoutDetection:
         add_vit_config(cfg)
         cfg.merge_from_file(cfg_path)
         cfg.merge_from_list(opts)
-        device = "cuda" if cuda.is_available() else "cpu"
         cfg.MODEL.DEVICE = device
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = threshold
 

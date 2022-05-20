@@ -92,7 +92,6 @@ def get_html_span_by_type(block, section):
     if filetype in ["text", "title"]:
         html_span = get_text_span(text, filetype, section)
 
-    #   TODO: add table support
     elif filetype in ["figure", "table"]:
         coords = block.block.coordinates
         if filetype == "table" and not text.endswith("jpg"):

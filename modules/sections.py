@@ -177,7 +177,6 @@ def get_page_columns(layout):
     cols = 1
     for i, b1 in enumerate(layout):
         b1_x1, b1_y1, b1_x2, b1_y2 = b1.block.coordinates
-        # cx1 =  b1_x1 + ((b1_x2 - b1_x1) / 2)   #   TODO: remove this
 
         l2 = layout.copy()
         l2.pop(i)  #  exclude current block

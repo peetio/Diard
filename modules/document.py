@@ -157,7 +157,10 @@ class Document:
         """
         #   e.g, "/resources/pdfs/example.pdf" -> "example.pdf"
         #           or "/resources/doc_images" -> "doc_images"
+        if source_path.endswith('/'):
+            source_path = source_path[:-1]
         name = source_path.split("/")[-1]
+
         if use_images:
             self.name = name
         else:
@@ -167,7 +170,6 @@ class Document:
                 raise DocumentFileFormatError(name, file_format)
             self.name = ".".join(name.split(".")[:-1])
 
-        print(self.name)    #   TODO: remove this, just a check for image loading
         self.source_path = source_path
 
         if output_path is None:
@@ -251,10 +253,6 @@ class Document:
                 df = self.table_predictor.get_table_data(
                     snippet, lang=self.lang, debug=False, threshold=0.7
                 )
-                #   NOTE: when processing tables in the HTML you have to check whether you are
-                #   working with the image path or with DataFrame
-                #   NOTE: the DataFrame can be converted back from the string to a DF
-                #   use: https://stackoverflow.com/questions/22604564/create-pandas-dataframe-from-a-string
 
                 df_csv = df.to_csv(index=False)
                 block.set(text=df_csv, inplace=True)
@@ -690,7 +688,6 @@ class Document:
 
         images = []
         for fn in img_filenames:
-            #   TODO: test if it makes a difference when you don't or when you do use a '/' in the source_path attribute
             img_path = self.source_path + '/' + fn
             img = cv2.imread(img_path)
             images.append(img)

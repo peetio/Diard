@@ -23,6 +23,7 @@ def main():
     ld = LayoutDetection(
         cfg_path=config_path,
         weights_path=weights_path,
+        device='cuda',
         batch_size=1,
         workers=1,
         threshold=0.65,
@@ -33,7 +34,7 @@ def main():
     source_dir = "./resources/pdfs/"
 
     table_weights_path = "./resources/weights/pubtables1m_structure_detr_r18.pth"
-    table_predictor = TableExtractor(table_weights_path)
+    table_predictor = TableExtractor(table_weights_path, device='cpu')
 
     lang = "deu"  #   language used most of your documents
     langs = ["eng", "fra", "deu"]  #   only useful if lang_detect=True
