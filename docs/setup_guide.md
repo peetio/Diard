@@ -78,7 +78,7 @@ After your environment is set up, you should download the pre-trained model weig
 
 ### STEP 8.1 - (optional) Table Extraction
 
-A different model is used for table structure recognition. If you want table extraction you have to download the pre-trained model weights from [here](https://pubtables1m.blob.core.windows.net/model/pubtables1m_detection_detr_r18.pth), and put the file in the './resources/weights' directory.
+A different model is used for table structure recognition. If you want table extraction, another pre-trained model's weights have to be downloaded from [here](https://pubtables1m.blob.core.windows.net/model/pubtables1m_detection_detr_r18.pth). Also put this file in the './resources/weights' directory.
 
 Check out the [examples](./examples.md) for a guide on how to enable table extraction in the pipeline.
 
