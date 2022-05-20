@@ -277,6 +277,63 @@ doc.save_layouts_as_html()
 ```
 
 ## Output Directory Structure
+After exporting your results as JSON and/ or HTML you can find them in the output directory. Within the output directory you should see a directory named after your document which will contain the HTML, JSON, and visualization files.
+
+The only exception to this is the use of images instead of a document. Then the output directory name will be the name of the directory containing the document images.
+
+```tree
+output
+│   
++---example                                 # Directory for each PDF you process
+    │
+    │    
+    +---html                                # Storage for HTML visualizations    
+    │
+    +---jsons                               # Storage for doc layout JSON files
+    │ 
+    +---visualizations                      # Storage for detection visualizations
+```
 
 ## Enabling Table Extraction
-TODO: make sure you have installed the table-transformer pre-trained weights
+By default tables are processed like figures. They are cropped out of the original document image and saved for reproduction in HTML. But the pipeline also supports the reproduction of tables as a dataframe.
+
+When reproducing the extracted table in HTML it looks like this (bottom image). 
+
+<p align="center">
+<img src="../resources/images/table_example2.png" width="700"/>
+</p>
+
+<p align="center">
+<img src="../resources/images/table_html_example.png" width="700"/>
+</p>
+
+For the table JSON format you should look at the [export section](#json--html-export)
+
+Now, how do you enable the table extractor? First, you should make sure that you followed the [guidelines](setup_guide.md#step-81---optional-table-extraction) to set up your environment with the intentions of using the table extractor.
+
+If you have the pre-trained model in place, you can make the following changes to your code in order to enable the table extractor.
+
+First, obtain the table predictor or model.
+
+```python
+table_weights_path = "./resources/weights/pubtables1m_structure_detr_r18.pth"
+table_predictor = TableExtractor(table_weights_path, device='cpu')
+```
+
+Note that you can set a different device for the table extractor model. This might come in handy for people who have only a small amount of GPU memory.
+
+Next, add the table predictor to the list of parameters when creating a new Document object instance.
+
+```python
+doc = Document(
+    doc_path,
+    predictor=predictor,
+    metadata=metadata,
+
+    table_predictor=table_predictor,
+
+    lang=lang,
+    lang_detect=True,
+    langs=langs,
+    )
+```

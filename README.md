@@ -44,7 +44,7 @@ For more detailed explanations on how the pipeline can be used, you can refer to
 
 ```tree
 Diard
-│   │
+│   
 │   main.py                                 # The document image analysis pipeline
 │   requirements.txt                        # List of required Python libraries
 │   README.md                               # This file
