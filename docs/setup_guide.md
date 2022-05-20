@@ -72,7 +72,7 @@ Install the required Python libraries from the root of the repository. Don't for
 pip install -r requirements.txt
 ```
 
-## STEP 8 - Downloading Models
+## STEP 8 - Pre-trained Models
 
 After your environment is set up, you should download the pre-trained model weights from [this link](https://layoutlm.blob.core.windows.net/dit/dit-fts/publaynet_dit-l_cascade.pth) (1.4GB) and place it in the './resources/weights/' directory.
 
