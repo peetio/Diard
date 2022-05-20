@@ -47,7 +47,7 @@ def numbered_filenames_check(filenames):
     numbered = all(map(lambda fn: ".".join(fn.split(".")[:-1]).isdigit(), filenames))
     return numbered
 
-def overlapCheck(r1, r2):
+def overlap_check(r1, r2):
     """Checks if two rectangles overlap
 
     Args:
@@ -67,7 +67,7 @@ def overlapCheck(r1, r2):
         return True
 
 
-def filterOverlaps(rects, scores, classes):
+def filter_overlaps(rects, scores, classes):
     """Filters out overlapping rectangles
 
     Args:
@@ -86,7 +86,7 @@ def filterOverlaps(rects, scores, classes):
         rects2[r1_id] = Rectangle(0, 0, 0, 0)  #   keep original length in list copy
 
         for r2_id, r2 in enumerate(rects2):
-            overlap = overlapCheck(r1, r2)
+            overlap = overlap_check(r1, r2)
             if overlap:
                 r1_area = (r1.x_2 - r1.x_1) * (r1.y_2 - r1.y_1)
                 r2_area = (r2.x_2 - r2.x_1) * (r2.y_2 - r2.y_1)
@@ -113,7 +113,7 @@ def filterOverlaps(rects, scores, classes):
 
 class Document:
     @classmethod
-    def __getLayoutJsonDims(cls, l, dims=0):
+    def __get_layout_json_dims(cls, l, dims=0):
         """Recursive function to find number of dimensions (n of rows) in a list
 
         Args:
@@ -127,7 +127,7 @@ class Document:
         if not type(l) == list:
             return dims
 
-        return cls.__getLayoutJsonDims(l[0], (dims + 1))
+        return cls.__get_layout_json_dims(l[0], (dims + 1))
 
     def __init__(
         self,
@@ -194,14 +194,14 @@ class Document:
         if use_images:
             self.set_images()
 
-    def docToImages(self):
+    def doc_to_images(self):
         """Converts each page of a document to images"""
         pil_imgs = convert_from_path(self.source_path)
         self.images = [
             cv2.cvtColor(np.asarray(img), cv2.COLOR_BGR2RGB) for img in pil_imgs
         ]
 
-    def __getTextFromImage(self, block, img):
+    def __get_text_from_image(self, block, img):
         """Extracts text from image
 
         Args:
@@ -216,7 +216,7 @@ class Document:
         text = image_to_string(snippet, lang=self.lang)
         return text
 
-    def __setExtractedData(self, block, img, page, idx):
+    def __set_extracted_data(self, block, img, page, idx):
         """Extracts and sets content of document object (block)
 
         Args:
@@ -232,7 +232,7 @@ class Document:
         b_type = block.type.lower()
 
         if b_type in ["text", "title", "list"]:
-            text = self.__getTextFromImage(block, img)
+            text = self.__get_text_from_image(block, img)
 
             block.set(text=text, inplace=True)
 
@@ -262,14 +262,14 @@ class Document:
         else:
             logging.warning(f"Block of type '{b_type}' not supported.")
 
-    def __detectLanguage(self, block, img):
+    def __detect_language(self, block, img):
         """Detects and sets language if detection is successful
 
         Args:
             block (layoutparser.elements.TextBlock): TextBlock obj containing document object data
             img (numpy.ndarray): image of document page
         """
-        text = self.__getTextFromImage(block, img)
+        text = self.__get_text_from_image(block, img)
         if len(text.split(" ")) > 5:
             lang = langdetect.detect(text.strip())
             lang = pycountry.languages.get(alpha_2=lang)
@@ -286,7 +286,7 @@ class Document:
 
             self.lang_detect = False
 
-    def extractLayouts(self, segment_sections=False, visualize=False):
+    def extract_layouts(self, segment_sections=False, visualize=False):
         """Extracts and sets layout from document images
 
         Args:
@@ -332,7 +332,7 @@ class Document:
                 for b in np_boxes
             ]
 
-            filtered_rects, filtered_scores, filtered_classes = filterOverlaps(
+            filtered_rects, filtered_scores, filtered_classes = filter_overlaps(
                 rects=rects, scores=scores, classes=classes
             )
             img = self.images[page]
@@ -348,24 +348,24 @@ class Document:
                 #   detect language used in document
                 is_text = block.type.lower() == "text"
                 if self.lang_detect and is_text:
-                    self.__detectLanguage(block, img)
+                    self.__detect_language(block, img)
 
             for j, b in enumerate(blocks):
-                self.__setExtractedData(b, img, page, j)
+                self.__set_extracted_data(b, img, page, j)
 
             self.layouts.append(lp.Layout(blocks=blocks))
 
             if visualize:
-                self.__visualizePredictions(predicts, img, page)
+                self.__visualize_predictions(predicts, img, page)
 
         if segment_sections:
             if not self.ordered:
                 logging.info("Ordering layout for section segmentation.")
-                self.orderLayouts()
+                self.order_layouts()
 
-            self.__segmentSections()
+            self.__segment_sections()
 
-    def orderLayouts(self):
+    def order_layouts(self):
         """Orders each page's layout based object bounding boxes"""
 
         if not self.ordered:
@@ -448,7 +448,7 @@ class Document:
         else:
             logging.info("Not re-ordering layout.")
 
-    def __visualizePredictions(self, predicts, img, index):
+    def __visualize_predictions(self, predicts, img, index):
         """Saves prediction visualizations
 
         Args:
@@ -471,7 +471,7 @@ class Document:
         Path(visual_dir).mkdir(parents=True, exist_ok=True)
         cv2.imwrite(visual_dir + str(index) + ".jpg", vis_img)
 
-    def pageCheck(self, page):
+    def page_check(self, page):
         """Checks if the page is within range
 
         Args:
@@ -482,7 +482,7 @@ class Document:
         if not 0 <= page < pages:
             raise PageNumberError(page, pages)
 
-    def __getLayoutJson(self, page):
+    def __get_layout_json(self, page):
         """Gets JSON object representing a single document page layout
 
         Args:
@@ -516,7 +516,7 @@ class Document:
 
         return layout_json
 
-    def __getLayoutsJson(self):
+    def __get_layouts_json(self):
         """Gets JSON object representing the whole document layout
 
         Returns:
@@ -525,28 +525,28 @@ class Document:
 
         layouts_json = []
         for page in range(len(self.layouts)):
-            layouts_json.append(self.__getLayoutJson(page))
+            layouts_json.append(self.__get_layout_json(page))
 
         return layouts_json
 
-    def saveLayoutAsJson(self, page):
+    def save_layout_as_json(self, page):
         """Saves JSON representation of single document page layout
 
         Args:
             page (int): page number of document
         """
 
-        self.pageCheck(page)
+        self.page_check(page)
 
         json_dir = self.output_path + "/jsons/"
         Path(json_dir).mkdir(parents=True, exist_ok=True)
         json_path = json_dir + str(page) + ".json"
 
-        layout_json = self.__getLayoutJson(page)
+        layout_json = self.__get_layout_json(page)
         with open(json_path, "w") as f:
             f.write(json.dumps(layout_json))
 
-    def saveLayoutsAsJson(self):
+    def save_layouts_as_json(self):
         """Saves JSON representation of whole document layout"""
 
         pages = len(self.layouts)
@@ -558,21 +558,21 @@ class Document:
         Path(json_dir).mkdir(parents=True, exist_ok=True)
 
         for page in range(pages):
-            self.saveLayoutAsJson(page)
+            self.save_layout_as_json(page)
 
         json_path = json_dir + self.name + ".json"
-        layouts_json = self.__getLayoutsJson()
+        layouts_json = self.__get_layouts_json()
         with open(json_path, "w") as f:
             f.write(json.dumps(layouts_json))
 
-    def saveLayoutAsHtml(self, page):
+    def save_layout_as_html(self, page):
         """Saves JSON representation of single document page layout
 
         Args:
             page (int): page number of document
         """
 
-        self.pageCheck(page)
+        self.page_check(page)
         html_dir = self.output_path + "/htmls/"
         Path(html_dir).mkdir(parents=True, exist_ok=True)
         html_path = html_dir + str(page) + ".html"
@@ -582,14 +582,14 @@ class Document:
         with open(html_path, "w") as f:
             f.write(layout_html)
 
-    def saveLayoutsAsHtml(self):
+    def save_layouts_as_html(self):
         """Saves HTML representation of whole document layout"""
 
         html_dir = self.output_path + "/htmls/"
         Path(html_dir).mkdir(parents=True, exist_ok=True)
 
         for page in range(len(self.layouts)):
-            self.saveLayoutAsHtml(page)
+            self.save_layout_as_html(page)
 
         html_path = html_dir + self.name + ".html"
         layouts_html = getLayoutsHtml(self.layouts)
@@ -597,7 +597,7 @@ class Document:
         with open(html_path, "w") as f:
             f.write(layouts_html)
 
-    def __jsonToLayout(self, layout_json):
+    def __json_to_layout(self, layout_json):
         """Gets a Layout object from a JSON layout representation of a single page
 
         Args:
@@ -625,7 +625,7 @@ class Document:
 
         self.layouts.append(lp.Layout(blocks=blocks))
 
-    def loadLayoutFromJson(self, filename):
+    def load_layout_from_json(self, filename):
         """Loads layouts from JSON file
 
         Args:
@@ -639,16 +639,16 @@ class Document:
             layout_json = json.load(f)
 
         #   single or joined layouts file check based on list dimensionality
-        dims = self.__getLayoutJsonDims(l=layout_json)
+        dims = self.__get_layout_json_dims(l=layout_json)
         if dims == 1:
-            self.__jsonToLayout(layout_json)
+            self.__json_to_layout(layout_json)
         elif dims == 2:
             for layout in layout_json:
-                self.__jsonToLayout(layout)
+                self.__json_to_layout(layout)
         else:
             raise InputJsonStructureError(filename)
 
-    def __setSections(self, labels):
+    def __set_sections(self, labels):
         """Sets section to which each document object belongs
 
         Args:
@@ -666,13 +666,13 @@ class Document:
                     title_id += 1
                 b.section = section
 
-    def __segmentSections(self):
+    def __segment_sections(self):
         """Segments sections based on numbering and natural breaks"""
         cn_labels = sectionByChapterNums(self.layouts)
         ratios = getTitleRatios(self.layouts)
         r_labels = sectionByRatio(ratios, self.name)
         labels = prioritizeLabels(self.layouts, cn_labels, r_labels)
-        self.__setSections(labels)
+        self.__set_sections(labels)
 
     def set_images(self):
         """Sets document images found in given source path
