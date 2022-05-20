@@ -1,3 +1,8 @@
+from io import StringIO
+
+import pandas as pd
+
+
 def getLayoutHtml(layout, section=None):
     """Saves HTML representation of single document page layout
 
@@ -90,7 +95,10 @@ def getHtmlSpanByType(block, section):
     #   TODO: add table support
     elif filetype in ["figure", "table"]:
         coords = block.block.coordinates
-        html_span = getImageSpan(text, coords, section)
+        if filetype == "table" and not text.endswith("jpg"):
+            html_span = getTableSpan(text, section)
+        else:
+            html_span = getImageSpan(text, coords, section)
 
     elif filetype == "list":
         html_span = getListSpan(text, section)
@@ -153,6 +161,32 @@ def getListSpan(text, section):
 
     html_span += "</ul>"
 
+    return html_span
+
+
+def getTableSpan(text, section):
+    """Gets HTML code representing a table
+
+    Args:
+        text (string): string containing the dataframe after .to_string()
+        section (int): the current document section
+
+    Returns:
+        string: a string containing an HTML representation of a table
+    """
+    #   reconstruct dataframe from string
+    table_str = StringIO(text)
+    df = pd.read_csv(table_str)
+
+    #   TODO: add support for more complex tables
+    html_span = "<table class='" + str(section) + "'>"
+    for row_idx in range(len(df)):
+        html_span += "<tr>"
+        for (col_idx, col_rows) in df.iteritems():
+            html_span += "<td>" + col_rows[row_idx] + "</td>"
+        html_span += "</tr>"
+
+    html_span += "</table>"
     return html_span
 
 
