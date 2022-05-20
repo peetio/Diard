@@ -1,9 +1,15 @@
 # Table of Contents
 - [Examples Introduction](#examples-introduction)
-- [x](#x)
+- [Processing A Single / Multiple Document (PDF)](#processing-a-single--multiple-document-pdf)
+- [Using Images Instead of Documents](#using-images-instead-of-documents)
+- [JSON / HTML Export](#json--html-export)
+- [JSON Format](#json-format)
+- [Loading Layouts From JSON](#loading-layouts-from-json)
+- [Output Directory Structure](#output-directory-structure)
+- [Enabling Table Extraction](#enabling-table-extraction)
 
 ## Examples Introduction
-In this document all the pipeline's functionalities are explained with code examples. If the main example didn't fulfil your document analysis wishes, then hopefully this guide will help you with that.
+In this document all the pipeline's functionalities are explained with code examples. If the main example didn't fulfil your document analysis wishes, then this guide should solve that!
 
 ## Processing A Single / Multiple Document (PDF)
 Processing a single or multiple documents is probably the most common use case of this pipeline. That's why we decided to use this as the main example [main.py](../main.py). We recommend you to first take a look at the [main.py](../main.py) file to get an idea of the workflow because every example below builds from this source code.
