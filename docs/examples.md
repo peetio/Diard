@@ -68,7 +68,7 @@ for filename in filenames:
     doc.save_layouts_as_html()
 ```
 
-When working with documents (e.g., PDF), the document's pages first need to be converted to images. For this we use the 'doc_to_images' method. Is your document already in image format? No worries, we got you covered in the [next section](#using-images-instead-of-documents)
+When working with documents (e.g., PDF), the document's pages first need to be converted to images. For this we use the 'doc_to_images' method. Is your document already in image format? No worries, we got you covered in the [next section](#using-images-instead-of-documents).
 
 ```python
 doc.doc_to_images()
