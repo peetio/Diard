@@ -4,7 +4,8 @@
 
 # Table of Contents
 - [Diard Introduction](#diard-introduction)
-- [Environment Setup](#environment-setup)
+- [Environment Setup (MacOS & Linux)](#environment-setup)
+- [Running Things Locally](#running-things-locally)
 - [Directory Structure](#directory-structure)
 
 ## Diard Introduction
@@ -15,7 +16,7 @@
 
 Diard is a document image analysis pipeline to extract semi-structured Analysis Ready Data from your Document's Images. To achieve this, the state-of-the-art layout detection model is used ([DiT](https://github.com/microsoft/unilm/tree/master/dit)) to extract document objects (e.g., title, text, list, figure,...) along with [table-transformer](https://github.com/microsoft/table-transformer) for table extraction. These objects are then used to segment the sections (e.g., Table Of Contents, Introduction,...) and to find the information needed to obtain a semi-structured version of your document. The pipeline output can be exported as HTML for evaluation and as JSON for text analysis.
 
-## Environment Setup (MacOS, Linux)
+## Environment Setup (MacOS & Linux)
 First, clone the repository and use the [setup guide](docs/setup_guide.md) to run things locally.
 
 ```bash
@@ -23,7 +24,7 @@ git clone https://github.com/thibaultvt/Diard.git
 cd Diard
 ```
 
-## Running Things                 Locally
+## Running Things Locally
 If you just want to test the pipeline, go ahead and use the following command to run the example script.
 
 ```bash
