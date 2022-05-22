@@ -313,7 +313,7 @@ When reproducing the extracted table in HTML it looks like this (bottom image).
 <img src="../resources/images/table_html_example.png" width="700"/>
 </p>
 
-For the table JSON format you should look at the [export section](#json--html-export)
+For the table JSON format you should look at the [export section](#json--html-export).
 
 Now, how do you enable the table extractor? First, you should make sure that you followed the [guidelines](setup_guide.md#step-81---optional-table-extraction) to set up your environment with the intentions of using the table extractor.
 
