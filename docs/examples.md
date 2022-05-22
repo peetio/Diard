@@ -276,8 +276,8 @@ Next, call the 'load_layout_from_json' method with the path to the JSON file as 
 
 ```python
 json_path = "./output/example/jsons/example.json"
+
 doc.load_layout_from_json(json_path)
-    
 doc.order_layouts()
 doc.save_layouts_as_html()
 ```
