@@ -23,7 +23,7 @@ git clone https://github.com/thibaultvt/Diard.git
 cd Diard
 ```
 
-## Running Locally
+## Running Things                 Locally
 If you just want to test the pipeline, go ahead and use the following command to run the example script.
 
 ```bash
