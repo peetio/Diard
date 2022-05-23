@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 import warnings
@@ -8,6 +9,15 @@ from modules.tables import TableExtractor
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Diard pipeline script")
+    parser.add_argument(
+        "--overwrite",
+        help="Reprocess and overwrite previously processed documents",
+        action="store_true",
+        default=False
+    )
+    args = parser.parse_args()
+
     logging.basicConfig(
         format="%(asctime)s | %(levelname)s: %(message)s", level=logging.NOTSET
     )
@@ -23,7 +33,7 @@ def main():
     ld = LayoutDetection(
         cfg_path=ld_config_path,
         weights_path=ld_weights_path,
-        device='cuda', # change to cpu if you don't have CUDA enabled GPU
+        device='cuda', # change to 'cpu' if you don't have CUDA enabled GPU
         batch_size=1,
         workers=1,
         threshold=0.65,
@@ -32,6 +42,7 @@ def main():
     predictor = ld.get_predictor()
     metadata = ld.get_metadata()
     source_dir = "./resources/pdfs/"
+    output_dir = "./output/"
 
     #   language used in most of your documents (ISO 639-3 format)
     lang = "deu"  
@@ -44,6 +55,11 @@ def main():
 
     #   process multiple pdfs
     filenames = os.listdir(source_dir)
+    
+    #   filter out previously processed documents
+    if not args.overwrite:
+        processed_files = os.listdir(output_dir)
+        filenames = [fn for fn in filenames if '.'.join(fn.split('.')[:-1]) not in processed_files]
 
     for filename in filenames:
         doc_path = source_dir + filename

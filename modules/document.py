@@ -164,10 +164,10 @@ class Document:
         if use_images:
             self.name = name
         else:
-            #   "example.filename.pdf" -> "example.filename"
             file_format = name.split(".")[-1]
             if file_format not in ["pdf"]:
                 raise DocumentFileFormatError(name, file_format)
+            #   "example.filename.pdf" -> "example.filename"
             self.name = ".".join(name.split(".")[:-1])
 
         self.source_path = source_path
@@ -292,6 +292,7 @@ class Document:
             segment_sections (bool): if True sections are segmented
             visualize (bool): if True detection visualizations are saved
         """
+
 
         if self.table_predictor:
             logging.info(
