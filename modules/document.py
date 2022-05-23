@@ -383,23 +383,15 @@ class Document:
                 if cols == 1:
                     left_blocks = sorted(blocks, key=lambda b: b.block.y_1)
                 if cols == 2:
-                    #   get blocks and filter per column
+                    #   get blocks and filter per column on xmin value
                     left_blocks = list(
-                        filter(
-                            lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2)
-                            < (width / 2),
-                            blocks,
-                        )
+                        filter(lambda b: b.block.x_1 < (width / 2), blocks)
                     )
                     right_blocks = list(
-                        filter(
-                            lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2)
-                            >= (width / 2),
-                            blocks,
-                        )
+                        filter(lambda b: b.block.x_1 >= (width / 2), blocks)
                     )
 
-                    #   filter on y-axis page location
+                    #   sort on y-axis page location
                     left_blocks = sorted(left_blocks, key=lambda b: b.block.y_1)
                     right_blocks = sorted(right_blocks, key=lambda b: b.block.y_1)
 
@@ -410,31 +402,18 @@ class Document:
                     cols = width / 3
                     break1, break2 = cols, cols * 2
 
-                    #   get blocks and filter per column
+                    #   get blocks and filter per column on xmin value
                     left_blocks = list(
-                        filter(
-                            lambda b: b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2)
-                            <= break1,
-                            blocks,
-                        )
+                        filter(lambda b: b.block.x_1 <= break1, blocks)
                     )
                     center_blocks = list(
-                        filter(
-                            lambda b: break1
-                            < b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2)
-                            < break2,
-                            blocks,
-                        )
+                        filter(lambda b: break1 < b.block.x_1 < break2, blocks)
                     )
                     right_blocks = list(
-                        filter(
-                            lambda b: break2
-                            <= b.block.x_1 + ((b.block.x_2 - b.block.x_1) / 2),
-                            blocks,
-                        )
+                        filter(lambda b: break2 <= b.block.x_1, blocks)
                     )
 
-                    #   filter on y-axis page location
+                    #   sort on y-axis page location
                     left_blocks = sorted(left_blocks, key=lambda b: b.block.y_1)
                     center_blocks = sorted(center_blocks, key=lambda b: b.block.y_1)
                     right_blocks = sorted(right_blocks, key=lambda b: b.block.y_1)
