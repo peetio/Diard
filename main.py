@@ -16,6 +16,12 @@ def main():
         action="store_true",
         default=False
     )
+    parser.add_argument(
+        "--skip-failures",
+        help="Skips files that cannot be processed instead of exiting program",
+        action="store_true",
+        default=False
+    )
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -34,7 +40,7 @@ def main():
         cfg_path=ld_config_path,
         weights_path=ld_weights_path,
         device='cuda', # change to 'cpu' if you don't have CUDA enabled GPU
-        batch_size=1,
+        batch_size=4,
         workers=1,
         threshold=0.65,
     )
@@ -82,6 +88,9 @@ def main():
             doc.save_layouts_as_html()
 
         except Exception as ex:
+            if not args.skip_failures:
+                logging.warning("Exiting")
+                raise ex
             logging.warning(f"Could not process '{filename}'. Exception: {ex}")
 
 if __name__ == "__main__":
