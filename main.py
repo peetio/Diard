@@ -62,23 +62,27 @@ def main():
         filenames = [fn for fn in filenames if '.'.join(fn.split('.')[:-1]) not in processed_files]
 
     for filename in filenames:
-        doc_path = source_dir + filename
-        
-        doc = Document(
-            doc_path,
-            predictor=predictor,
-            metadata=metadata,
-            lang=lang,
-            lang_detect=True,
-            langs=langs
-        )
+        try:
+            doc_path = source_dir + filename
 
-        #   extract & export layouts
-        doc.doc_to_images()
-        doc.extract_layouts(visualize=True, segment_sections=True)
-        doc.order_layouts()
-        doc.save_layouts_as_json()
-        doc.save_layouts_as_html()
+            doc = Document(
+                doc_path,
+                predictor=predictor,
+                metadata=metadata,
+                lang=lang,
+                lang_detect=True,
+                langs=langs
+            )
+
+            #   extract & export layouts
+            doc.doc_to_images()
+            doc.extract_layouts(visualize=True, segment_sections=True)
+            doc.order_layouts()
+            doc.save_layouts_as_json()
+            doc.save_layouts_as_html()
+
+        except Exception as ex:
+            logging.warning(f"Could not process '{filename}'. Exception: {ex}")
 
 if __name__ == "__main__":
     main()

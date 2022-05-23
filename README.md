@@ -25,10 +25,10 @@ cd Diard
 ```
 
 ## Running Things Locally
-If you just want to test the pipeline, go ahead and use the following command to run the example script.
+If you just want to test the pipeline, go ahead and use the following command to run the example script. The script has an argument which allows you to skip previously processed documents. If you don't want to skip documents, remove the --overwrite argument from the command below.
 
 ```bash
-python main.py
+python main.py --overwrite
 ```
 
 After runnnig the above command, you should see output similar to the one below in your terminal.
