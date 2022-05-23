@@ -643,7 +643,7 @@ class Document:
         """Loads layouts from JSON file
 
         Args:
-            filename (str): JSON filename
+            json_path (str): JSON filename
         """
         with open(json_path, "r") as f:
             layout_json = json.load(f)

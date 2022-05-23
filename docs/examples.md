@@ -343,3 +343,91 @@ doc = Document(
     langs=langs,
     )
 ```
+
+## Using JSON for Further Analysis
+In the root of the directory you'll find a script that shows how you can use the Diard pipeline output for further analysis. Don't forget to add the file location of the JSON file that you want to process by setting the '--json-path' argument.
+
+```bash
+# from root of repo run
+python load_from_json.py --json-path output/example/jsons/example.json
+```
+
+Let's go over the script and discuss what else you could add.
+
+First, we load the document objects from the JSON file using the 'load_layout_from_json' function. The only parameter we need to pass to this function, is the path to the JSON file. Whether the JSON file contains layout information representing a single page or a whole document, will be figured out by the algorithm. Which blocks or document objects belong to the same page can still be deduced from the 'page' key / value pair of the block's dictionary, so don't worry if that's what you're looking for.
+
+```python
+blocks = load_layout_from_json(args.json_path)
+```
+
+The blocks variable will contain a list of dictionaries with the following structure.
+
+```python
+{
+  'id': 2, 
+  'type': 'text',
+  'content': 'This is example text.',
+  'box': [174, 1719, 850, 1770], 
+  'page': 0, 
+  'section': 1  # only present if section segmentation was used
+}
+```
+
+As long as you know how a Python [dictionary](https://www.w3schools.com/python/python_dictionaries.asp) works, you can do anything you want with this data.
+
+Using the individual key / value pairs would look like this. Note that we put a try clause around the section's print statement because this pair is only present if section segmentation was used.
+
+```python
+is_table = block['type'] == 'table'
+is_dict = type(block['content']) == dict
+for k, v in block.items():
+  if is_table and is_dict and k == 'content':
+    #   resulting variable is not used in this example
+    df = pd.DataFrame.from_dict(v)
+    #   do what you want with the tabular data...
+  elif k == 'content':
+    v = v.strip()
+
+  try:
+    print(f"{k}: {v}")
+  #   catch key / value pair if section segmentation wasn't used
+  except KeyError:
+    pass
+```
+
+### Reading Table Extraction Data From JSON
+If you processed your documents with [table extraction](#enabling-table-extraction) enabled, the steps to work with this data are a bit different from the other document objects. We also include these steps in the example by checking if the table was indeed processed with table extraction enabled.
+
+```python
+if is_table and is_dict and k == 'content':
+  df = pd.DataFrame.from_dict(v)  # or block['content']
+  #   next, do what you want with the tabular data...
+```
+
+You could also keep the tabular data in its original format, which is a dictionary structured in the following way. The first three keys represent the columns, and the following five keys the rows with the corresponding content as their value.
+
+```python
+{
+  '0': {
+    '0': 'QEO1 \x0c',
+    '1': 'QEO2 \x0c',
+    '2': 'QEO3 \x0c',
+    '3': 'QEO4A \x0c',
+    '4': 'QEO5 \x0c'
+  }, 
+  '1': {
+    '0': 'Notfall-Organisation \x0c',
+    '1': 'Notfall-Hotline \x0c',
+    '2': 'Fahrzeuge \x0c',
+    '3': 'Elektronische Rechnungsstel- lung \x0c',
+    '4': 'Daten    austausch und Reporting per elektronischer Übermittlung \x0c'
+  }, 
+  '2': {
+    '0': 'Aufzeigen ei Dienst nicht : \x0c',
+    '1': 'Nachweis eir \x0c',
+    '2': 'Regelmässig \x0c',
+    '3': 'Kann die Reı \x0c',
+    '4': 'Schriftlicher | \x0c'
+  }
+}
+```

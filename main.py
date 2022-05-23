@@ -77,7 +77,7 @@ def main():
                 metadata=metadata,
                 lang=lang,
                 lang_detect=True,
-                langs=langs
+                langs=langs,
             )
 
             #   extract & export layouts
