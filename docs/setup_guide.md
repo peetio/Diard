@@ -83,11 +83,22 @@ pip install -r requirements.txt
 
 ## STEP 8 - Pre-trained Models
 
-After your environment is set up, you should download the pre-trained model weights from [this link](https://layoutlm.blob.core.windows.net/dit/dit-fts/publaynet_dit-l_cascade.pth) (1.4GB) and place it in the './resources/weights/' directory.
+After your environment is set up, you should download the pre-trained model weights from [this link](https://layoutlm.blob.core.windows.net/dit/dit-fts/publaynet_dit-l_cascade.pth) (1.4GB) and place it in the './resources/weights/' directory. You can either do this manually or use the commands below.
+
+
+```bash
+# from root directory
+wget --directory-prefix=resources/weights https://layoutlm.blob.core.windows.net/dit/dit-fts/publaynet_dit-l_cascade.pth
+```
 
 ### STEP 8.1 - (optional) Table Extraction
 
-A different model is used for table structure recognition. If you want table extraction, another pre-trained model's weights have to be downloaded from [here](https://pubtables1m.blob.core.windows.net/model/pubtables1m_detection_detr_r18.pth). Also put this file in the './resources/weights' directory.
+A different model is used for table structure recognition. If you want table extraction, another pre-trained model's weights have to be downloaded from [here](https://pubtables1m.blob.core.windows.net/model/pubtables1m_detection_detr_r18.pth). Also put this file in the './resources/weights' directory. For this you can also use the commands below.
+
+```bash
+# from root directory
+wget --directory-prefix=resources/weights https://pubtables1m.blob.core.windows.net/model/pubtables1m_detection_detr_r18.pth
+```
 
 Check out the [examples](./examples.md) for a guide on how to enable table extraction in the pipeline.
 

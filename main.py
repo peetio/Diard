@@ -40,7 +40,7 @@ def main():
         cfg_path=ld_config_path,
         weights_path=ld_weights_path,
         device='cuda', # change to 'cpu' if you don't have CUDA enabled GPU
-        batch_size=4,
+        batch_size=1,
         workers=1,
         threshold=0.65,
     )
