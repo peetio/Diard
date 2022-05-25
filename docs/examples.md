@@ -7,6 +7,7 @@
 - [Loading Layouts From JSON](#loading-layouts-from-json)
 - [Output Directory Structure](#output-directory-structure)
 - [Enabling Table Extraction](#enabling-table-extraction)
+- [Using JSON for Further Analysis](#using-json-for-further-analysis)
 
 ## Examples Introduction
 In this document all the pipeline's functionalities are explained with code examples. If the main example didn't fulfil your document analysis wishes, then this guide should solve that!
