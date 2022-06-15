@@ -105,6 +105,5 @@ Diard
 ```
 
 ## Issues
-* [ ] ordering doesn't always work for layouts consisting of a varying number of columns
 * [ ] table extraction only works for consistent tables (no varying number of rows / columns per row / column)
 * [ ] OCR is unable to extract single digits,- could be fixed by setting a different Page Segmentation Method ([PSM](https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/))
