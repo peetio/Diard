@@ -20,7 +20,7 @@ Diard is a document image analysis pipeline to extract semi-structured Analysis 
 First, clone the repository and use the [setup guide](docs/setup_guide.md) to run things locally.
 
 ```bash
-git clone https://github.com/thibaultvt/Diard.git
+git clone https://github.com/peetio/Diard.git
 cd Diard
 ```
 
