@@ -14,7 +14,7 @@
 <img src="resources/images/block_schema.png" width="1000"/>
 </p>
 
-Diard is a document image analysis pipeline to extract semi-structured Analysis Ready Data from your Document's Images. To achieve this, the state-of-the-art layout detection model is used ([DiT](https://github.com/microsoft/unilm/tree/master/dit)) to extract document objects (e.g., title, text, list, figure,...) along with [table-transformer](https://github.com/microsoft/table-transformer) for table extraction. These objects are then used to segment the sections (e.g., Table Of Contents, Introduction,...) and to find the information needed to obtain a semi-structured version of your document. The pipeline output can be exported as HTML for evaluation and as JSON for text analysis.
+Diard is a document image analysis pipeline to extract semi-structured Analysis Ready Data from your Document's Images. To achieve this, the state-of-the-art layout detection model is used ([DiT](https://github.com/microsoft/unilm/tree/master/dit)) to extract document objects (e.g., title, text, list, figure,...) along with [table-transformer](https://github.com/microsoft/table-transformer) for table extraction (note: TE was not tested thoroughly and should be updated for serious use). These objects are then used to segment the sections (e.g., Table Of Contents, Introduction,...) and to find the information needed to obtain a semi-structured version of your document. The pipeline output can be exported as HTML for evaluation and as JSON for text analysis.
 
 ## Environment Setup (MacOS & Linux)
 First, clone the repository and use the [setup guide](docs/setup_guide.md) to run things locally.
